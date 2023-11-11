@@ -16,100 +16,164 @@
             android:id="@+id/view_finder"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:text="Hello World!"
+            app:layout_constraintDimensionRatio="1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <jp.co.cyberagent.android.gpuimage.GPUImageView
+            android:id="@+id/gupImage"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintDimensionRatio="1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/composeView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintDimensionRatio="1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.example.mycamerax.FocusView
+            android:id="@+id/focusView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             app:layout_constraintDimensionRatio="1"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
 
-        <androidx.appcompat.widget.LinearLayoutCompat
+
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/image"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintDimensionRatio="1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+        <ScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/view_finder">
-
-            <TextView
-                android:text="scale"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-            <com.google.android.material.slider.Slider
-                android:id="@+id/sd_scale"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:value="50"
-                android:valueFrom="0"
-                android:valueTo="100" />
-
-            <TextView
-                android:text="brightness"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-            <com.google.android.material.slider.Slider
-                android:id="@+id/sd_bright"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:value="100"
-                android:valueFrom="0"
-                android:valueTo="200" />
-
-            <TextView
-                android:text="tone"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-            <com.google.android.material.slider.Slider
-                android:id="@+id/sd_tone"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:value="50"
-                android:valueFrom="0"
-                android:valueTo="100" />
-
-            <TextView
-                android:text="sharpen"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-            <com.google.android.material.slider.Slider
-                android:id="@+id/sd_sharpen"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:value="50"
-                android:valueFrom="0"
-                android:valueTo="100" />
-
+            app:layout_constraintTop_toBottomOf="@+id/gupImage">
 
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center">
+                android:orientation="vertical">
 
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnPhoto"
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:text="PHOTO" />
+                    android:text="scale" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnVideo"
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/sd_scale"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:value="50"
+                    android:valueFrom="0"
+                    android:valueTo="100" />
+
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:text="VIDEO" />
+                    android:text="brightness" />
 
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/sd_bright"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:value="100"
+                    android:valueFrom="0"
+                    android:valueTo="200" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="tone" />
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/sd_tone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:value="50"
+                    android:valueFrom="0"
+                    android:valueTo="100" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="sharpen" />
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/sd_sharpen"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:value="50"
+                    android:valueFrom="0"
+                    android:valueTo="100" />
+
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center">
+
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnPhoto"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="2dp"
+                        android:text="PHOTO"
+                        android:textSize="10.sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnVideo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="2dp"
+                        android:text="VIDEO"
+                        android:textSize="10.sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="2dp"
+                        android:text="Filter"
+                        android:textSize="10.sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/no_filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="2dp"
+                        android:text="NoFilter"
+                        android:textSize="10.sp" />
+
+
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/img"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_gravity="center" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
-
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/img"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:layout_gravity="center" />
-
-        </androidx.appcompat.widget.LinearLayoutCompat>
+        </ScrollView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
