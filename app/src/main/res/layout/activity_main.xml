@@ -25,6 +25,7 @@
             android:id="@+id/gupImage"
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            app:gpuimage_surface_type="texture_view"
             app:layout_constraintDimensionRatio="1"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -47,8 +48,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
-
 
 
         <androidx.appcompat.widget.AppCompatImageView
@@ -85,44 +84,91 @@
                     android:valueFrom="0"
                     android:valueTo="100" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="brightness" />
-
-                <com.google.android.material.slider.Slider
-                    android:id="@+id/sd_bright"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:value="100"
-                    android:valueFrom="0"
-                    android:valueTo="200" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="tone" />
+                    android:text="filter" />
 
                 <com.google.android.material.slider.Slider
-                    android:id="@+id/sd_tone"
+                    android:id="@+id/slider"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:value="50"
+                    android:value="0"
                     android:valueFrom="0"
                     android:valueTo="100" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="sharpen" />
 
-                <com.google.android.material.slider.Slider
-                    android:id="@+id/sd_sharpen"
+                <androidx.appcompat.widget.LinearLayoutCompat
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:value="50"
-                    android:valueFrom="0"
-                    android:valueTo="100" />
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_sharpen"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="sharpen"
+                        android:textAllCaps="false"
+                        android:textSize="10sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_brightness"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="brightness"
+                        android:textAllCaps="false"
+                        android:textSize="10sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_tone"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="tone"
+                        android:textAllCaps="false"
+                        android:textSize="10sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_exposure"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Exposure"
+                        android:textAllCaps="false"
+                        android:textSize="10sp" />
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_contrast"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Contrast"
+                        android:textAllCaps="false"
+                        android:textSize="10sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_grayscale"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Grayscale"
+                        android:textAllCaps="false"
+                        android:textSize="10sp" />
+
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/no_filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="2dp"
+                        android:text="NoFilter"
+                        android:textSize="10.sp" />
+
+
+
+                </androidx.appcompat.widget.LinearLayoutCompat>
 
 
                 <androidx.appcompat.widget.LinearLayoutCompat
@@ -155,14 +201,15 @@
                         android:text="Filter"
                         android:textSize="10.sp" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/no_filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_margin="2dp"
-                        android:text="NoFilter"
-                        android:textSize="10.sp" />
 
+
+
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
 
                 </androidx.appcompat.widget.LinearLayoutCompat>
 
