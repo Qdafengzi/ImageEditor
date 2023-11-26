@@ -12,6 +12,9 @@
         android:layout_height="match_parent"
         tools:context=".MainActivity">
 
+
+
+
         <androidx.camera.view.PreviewView
             android:id="@+id/view_finder"
             android:layout_width="match_parent"
@@ -30,6 +33,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
 
         <androidx.compose.ui.platform.ComposeView
             android:id="@+id/composeView"
@@ -200,7 +204,13 @@
                         android:layout_margin="2dp"
                         android:text="Filter"
                         android:textSize="10.sp" />
-
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/jump"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="2dp"
+                        android:text="jump"
+                        android:textSize="10.sp" />
 
 
 

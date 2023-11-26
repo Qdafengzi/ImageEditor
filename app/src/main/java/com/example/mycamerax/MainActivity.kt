@@ -3,14 +3,18 @@ package com.example.mycamerax
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraMetadata
 import android.hardware.camera2.CaptureRequest
 import android.hardware.display.DisplayManager
+import android.media.MediaScannerConnection
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
+import android.renderscript.RenderScript
 import android.util.Log
 import android.util.Size
 import android.view.Display
@@ -19,6 +23,7 @@ import android.view.MotionEvent
 import android.view.OrientationEventListener
 import android.view.ScaleGestureDetector
 import android.view.Surface
+import android.view.ViewGroup
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.camera2.interop.Camera2CameraControl
@@ -28,10 +33,12 @@ import androidx.camera.camera2.interop.CaptureRequestOptions
 import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.Camera
+import androidx.camera.core.CameraFilter
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.CameraState
 import androidx.camera.core.ExperimentalGetImage
+import androidx.camera.core.ExperimentalZeroShutterLag
 import androidx.camera.core.ExposureState
 import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageAnalysis
@@ -51,6 +58,7 @@ import androidx.camera.video.Recording
 import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.camera.view.LifecycleCameraController
+import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.core.util.Consumer
 import androidx.lifecycle.LifecycleOwner
@@ -69,10 +77,9 @@ import jp.co.cyberagent.android.gpuimage.filter.GPUImageGrayscaleFilter
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageSharpenFilter
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageSketchFilter
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageWhiteBalanceFilter
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import java.io.File
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.ArrayDeque
@@ -150,6 +157,8 @@ class MainActivity : AppCompatActivity() {
 
     private val mainThreadExecutor by lazy { ContextCompat.getMainExecutor(this) }
 
+    lateinit var mImageAnalysis:ImageAnalysis
+
 
     private val mScaleGestureListener =
         object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
@@ -180,10 +189,21 @@ class MainActivity : AppCompatActivity() {
     private var currentRecording: Recording? = null
     private lateinit var recordingState: VideoRecordEvent
 
+    private lateinit var mCameraProvider: ProcessCameraProvider
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(mBinding.root)
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener(
+            {
+                mCameraProvider = cameraProviderFuture.get()
+                bindCameraUseCases(this@MainActivity, this@MainActivity)
+                queryCameraInfo(this@MainActivity,mCameraProvider)
+            },
+            mainThreadExecutor
+        )
 
         mGPUImageFilterGroup.addFilter(mGPUImageMovieWriter)
 
@@ -192,17 +212,72 @@ class MainActivity : AppCompatActivity() {
         mBinding.viewFinder.controller = mCameraXControl
         mCameraXControl.isPinchToZoomEnabled = true
         mCameraXControl.isTapToFocusEnabled = true
-
         mCameraXControl.bindToLifecycle(this)
 
-        lifecycleScope.launch {
-            bindCameraUseCases(this@MainActivity, this@MainActivity)
-        }
         clickListener()
     }
 
 
+    private fun queryCameraInfo(lifecycleOwner: LifecycleOwner, cameraProvider: ProcessCameraProvider) {
+        val cameraLensInfo = HashMap<Int, CameraInfo>()
+        arrayOf(CameraSelector.LENS_FACING_BACK, CameraSelector.LENS_FACING_FRONT).forEach { lens ->
+            val cameraSelector = CameraSelector.Builder().requireLensFacing(lens).build()
+            if (cameraProvider.hasCamera(cameraSelector)) {
+                val camera = cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector)
+                if (lens == CameraSelector.LENS_FACING_BACK) {
+                    cameraLensInfo[CameraSelector.LENS_FACING_BACK] = camera.cameraInfo
+                } else if (lens == CameraSelector.LENS_FACING_FRONT) {
+                    cameraLensInfo[CameraSelector.LENS_FACING_FRONT] = camera.cameraInfo
+                }
+            }
+        }
+        myCameraInfo.onInitialised(cameraLensInfo)
+    }
+
+
+    private val myCameraInfo:MCameraInfo= MCameraInfo()
+    private class MCameraInfo:CameraInitListener{
+        @OptIn(ExperimentalZeroShutterLag::class) @SuppressLint("RestrictedApi")
+        override fun onInitialised(cameraLensInfo: HashMap<Int, CameraInfo>) {
+            cameraLensInfo.forEach { t, u ->
+                XLogger.d("t:${t} u:${u.zoomState}")
+                XLogger.d("t:${t} u:${u.exposureState}")
+                XLogger.d("t:${t} u:${u.cameraSelector}")
+                XLogger.d("t:${t} u:${u.implementationType}")
+                XLogger.d("t:${t} u:${u.intrinsicZoomRatio}")
+                XLogger.d("t:${t} u:${u.cameraState}")
+                XLogger.d("t:${t} u:${u.isPrivateReprocessingSupported}")
+                XLogger.d("t:${t} u:${u.isZslSupported}")
+                XLogger.d("t:${t} u:${u.sensorRotationDegrees}")
+                XLogger.d("t:${t} u:${u.lensFacing}")
+                XLogger.d("t:${t} u:${u.supportedFrameRateRanges}")
+                XLogger.d("t:${t} u:${u.torchState}")
+                XLogger.d("t:${t} u:${u.hasFlashUnit()}")
+
+                XLogger.d("ssss")
+//                XLogger.d("t:${t} u:${u.isFocusMeteringSupported(FocusMeteringAction.)}")
+            }
+        }
+    }
+
+    private fun getCameraPreview() = PreviewView(this).apply {
+        layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        keepScreenOn = true
+    }
+
+
+
+    interface CameraInitListener {
+        fun onInitialised(cameraLensInfo: HashMap<Int, CameraInfo>)
+    }
+
+
+
     fun clickListener() {
+
         mBinding.btnPhoto.setOnClickListener {
             mSwitchVideo = true
             ///storage/emulated/0/Pictures/GPUImage/1699711140054.jpg
@@ -297,81 +372,77 @@ class MainActivity : AppCompatActivity() {
         mBinding.slider.addOnChangeListener { slider, value, fromUser ->
             filterAdjuster?.adjust(mBinding.slider.value.toInt())
             //TODO：如果是 自动对焦
-            setManualFocus(value.toInt())
+            //setManualFocus(value.toInt())
         }
 
         mBinding.btnBrightness.setOnClickListener {
-
             val group = GPUImageFilterGroup()
-            group.addFilter(GPUImageBrightnessFilter())
+            val filter = GPUImageBrightnessFilter()
+            group.addFilter(filter)
             group.addFilter(mGPUImageMovieWriter)
             mGPUImageFilterGroup = group
-            mBinding.gupImage.filter = group
 
-            switchFilterTo(group)
-            filterAdjuster?.adjust(mBinding.slider.value.toInt())
+            switchFilterTo(filter)
         }
 
         mBinding.btnTone.setOnClickListener {
             //TODO:白平衡的处理
             val group = GPUImageFilterGroup()
-            group.addFilter(GPUImageWhiteBalanceFilter())
+            val filter = GPUImageWhiteBalanceFilter()
+            group.addFilter(filter)
             group.addFilter(mGPUImageMovieWriter)
             mGPUImageFilterGroup = group
-            mBinding.gupImage.filter = group
 
-            switchFilterTo(group)
-            filterAdjuster?.adjust(mBinding.slider.value.toInt())
+            switchFilterTo(filter)
         }
 
         mBinding.btnSharpen.setOnClickListener {
             val group = GPUImageFilterGroup()
-            group.addFilter(GPUImageSharpenFilter())
+            val filter = GPUImageSharpenFilter()
+            group.addFilter(filter)
             group.addFilter(mGPUImageMovieWriter)
             mGPUImageFilterGroup = group
-            mBinding.gupImage.filter = group
 
-            switchFilterTo(group)
-            filterAdjuster?.adjust(mBinding.slider.value.toInt())
+            switchFilterTo(filter)
         }
 
         mBinding.btnExposure.setOnClickListener {
             val group = GPUImageFilterGroup()
-            group.addFilter(GPUImageExposureFilter())
+            val filter = GPUImageExposureFilter()
+            group.addFilter(filter)
             group.addFilter(mGPUImageMovieWriter)
             mGPUImageFilterGroup = group
-            mBinding.gupImage.filter = group
 
-            switchFilterTo(group)
-            filterAdjuster?.adjust(mBinding.slider.value.toInt())
+            switchFilterTo(filter)
         }
 
         mBinding.btnContrast.setOnClickListener {
             val group = GPUImageFilterGroup()
-            group.addFilter(GPUImageContrastFilter())
+            val filter = GPUImageContrastFilter()
+            group.addFilter(filter)
             group.addFilter(mGPUImageMovieWriter)
             mGPUImageFilterGroup = group
-            mBinding.gupImage.filter = group
 
-            switchFilterTo(group)
-            filterAdjuster?.adjust(mBinding.slider.value.toInt())
+            switchFilterTo(filter)
         }
 
         mBinding.btnGrayscale.setOnClickListener {
             val group = GPUImageFilterGroup()
-            group.addFilter(GPUImageGrayscaleFilter())
+            val filter = GPUImageGrayscaleFilter()
+            group.addFilter(filter)
             group.addFilter(mGPUImageMovieWriter)
             mGPUImageFilterGroup = group
-            mBinding.gupImage.filter = group
 
-            switchFilterTo(group)
-            filterAdjuster?.adjust(mBinding.slider.value.toInt())
+            switchFilterTo(filter)
         }
 
         mBinding.noFilter.setOnClickListener {
-            val group = GPUImageFilterGroup()
-            mGPUImageFilterGroup = group
-            mBinding.gupImage.filter = group
+            val groupFilter = GPUImageFilterGroup()
+            val filter = GPUImageFilter()
+            groupFilter.addFilter(filter)
+            mGPUImageFilterGroup = groupFilter
+
+            switchFilterTo(filter)
         }
 
 //        mBinding.slider.addOnChangeListener(OnChangeListener { slider, value, fromUser ->
@@ -407,23 +478,73 @@ class MainActivity : AppCompatActivity() {
 
         mBinding.btnVideo.setOnClickListener {
             if (mIsRecording) {
-                mBinding.btnVideo.text = "stop"
                 //暂停保存文件
                 mIsRecording = false
+                time = 0L
                 currentRecording?.stop()
+                mBinding.btnVideo.text = "VIDEO"
+
             } else {
                 //开始录制
-                mBinding.btnVideo.text = "start"
+//                mBinding.btnVideo.text = "start"
                 mSwitchVideo = true
                 mIsRecording = true
-//                 startRecording()
-                startRecordByGpuImageWrite()
+                 startRecording()
+//                startRecordByGpuImageWrite()
                 startRecordTimer()
             }
         }
+
+        mBinding.jump.setOnClickListener {
+            startActivity(Intent(this,SecondActivity::class.java))
+        }
+    }
+
+//    fun saveVideoToMediaStore(context: Context, videoFile: File, displayName: String, description: String) {
+//        val resolver = context.contentResolver
+//        val contentValues = ContentValues().apply {
+//            put(MediaStore.Video.Media.DISPLAY_NAME, displayName)
+//            put(MediaStore.Video.Media.DESCRIPTION, description)
+//            put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
+//            put(MediaStore.Video.Media.DATE_ADDED, System.currentTimeMillis() / 1000)
+//            put(MediaStore.Video.Media.DATE_TAKEN, System.currentTimeMillis())
+//        }
+//
+//        val uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, contentValues)
+//
+//        uri?.let { mediaUri ->
+//            resolver.openOutputStream(mediaUri)?.use { outputStream ->
+//                videoFile.inputStream().use { inputStream ->
+//                    inputStream.copyTo(outputStream)
+//                }
+//            }
+//
+//            // 发送广播通知媒体库刷新
+//            context.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, mediaUri))
+//        }
+//    }
+
+    fun refreshGalleryFile(){
+
+
     }
 
     private fun startRecordByGpuImageWrite() {
+        XLogger.d("录制 startRecordByGpuImageWrite")
+        val name = "CameraX-recording-" +
+                SimpleDateFormat(FILENAME_FORMAT, Locale.US)
+                    .format(System.currentTimeMillis()) + ".mp4"
+
+        val downloadFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+
+        val filePath = File(downloadFolder.absolutePath,name)
+
+        mGPUImageMovieWriter.prepareRecording(
+            filePath.absolutePath,
+            mBinding.gupImage.measuredWidth,
+            mBinding.gupImage.measuredHeight
+        )
+
 
         mGPUImageMovieWriter.startRecording(object : GPUImageMovieWriter.StartRecordListener {
             override fun onRecordStart() {
@@ -431,10 +552,14 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onRecordError(e: java.lang.Exception?) {
-                XLogger.d("录制出错")
+                XLogger.d("录制出错${e?.message}")
             }
-
         })
+
+        MediaScannerConnection.scanFile(this, arrayOf(filePath.absolutePath), null) { path, uri ->
+            // 扫描完成后的操作，如果需要的话
+            XLogger.d("录制 刷新成功：${filePath.absolutePath}")
+        }
     }
 
 
@@ -460,7 +585,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    @SuppressLint("MissingPermission")
+    @OptIn(ExperimentalGetImage::class) @SuppressLint("MissingPermission")
     private fun startRecording() {
         // create MediaStoreOutputOptions for our recorder: resulting our recording!
         val name = "CameraX-recording-" +
@@ -475,6 +600,8 @@ class MainActivity : AppCompatActivity() {
         ).setContentValues(contentValues)
             .build()
 
+        XLogger.d("文件地址：${mediaStoreOutput.collectionUri.toString()}")
+
         // configure Recorder and Start recording to the mediaStoreOutput.
         currentRecording =
             mVideoCapture?.output?.prepareRecording(this, mediaStoreOutput)
@@ -486,7 +613,10 @@ class MainActivity : AppCompatActivity() {
                 ?.start(mainThreadExecutor, captureListener)
 
         Log.i(TAG, "Recording started")
+
+
     }
+
 
 
     /**
@@ -512,7 +642,7 @@ class MainActivity : AppCompatActivity() {
     @ExperimentalCamera2Interop
     @OptIn(ExperimentalGetImage::class)
     @SuppressLint("RestrictedApi")
-    private suspend fun bindCameraUseCases(context: Context, lifecycleOwner: LifecycleOwner) {
+    private fun bindCameraUseCases(context: Context, lifecycleOwner: LifecycleOwner) {
         // 获取设备方向
         val display: Display = windowManager.defaultDisplay
         val displayRotation = display.rotation
@@ -528,15 +658,10 @@ class MainActivity : AppCompatActivity() {
 
         XLogger.d("=============>${rotationDegrees}")
 
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-        val cameraProvider = withContext(Dispatchers.IO) {
-            cameraProviderFuture.get()
-        } ?: return
+        if (!this::mCameraProvider.isInitialized ) return
 
 //        val build = Preview.Builder()
 //        Camera2Interop.Extender(build).setCaptureRequestOption("")
-
-
 //        val previewView = Preview.Builder().build()
 
         val width = mBinding.gupImage.width
@@ -565,10 +690,11 @@ class MainActivity : AppCompatActivity() {
 
 //            .setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, ...);
         val previewCase = previewBuilder.build()
+
             .also {
                 // 附加取景器的表面提供程序以预览用例
 //                mBinding.viewFinder.
-                it.setSurfaceProvider(mBinding.viewFinder.surfaceProvider)
+//                it.setSurfaceProvider(mBinding.viewFinder.surfaceProvider)
             }
 
         val selector = QualitySelector
@@ -576,8 +702,12 @@ class MainActivity : AppCompatActivity() {
                 Quality.UHD,
                 FallbackStrategy.higherQualityOrLowerThan(Quality.SD)
             )
+
         val recorder = Recorder.Builder()
+//            .setAspectRatio()
             .setQualitySelector(selector)
+
+            .setExecutor(mainThreadExecutor)
             .build()
 
 //        val cameraSelector = CameraSelector.Builder()
@@ -595,13 +725,11 @@ class MainActivity : AppCompatActivity() {
         mVideoCapture = VideoCapture.withOutput(recorder)
 
 
-
-
-
         if (mSwitchVideo) {
             //视频
             val recorder = Recorder.Builder()
 //                .setQualitySelector(qualitySelector)
+
                 .build()
             mVideoCapture = VideoCapture.withOutput(recorder)
         } else {
@@ -626,180 +754,51 @@ class MainActivity : AppCompatActivity() {
         // ImageCapture
 
 
-        // ImageAnalysis
-
-
-//        val imageAnalyzerCase = ImageAnalysis.Builder()
-//            // We request aspect ratio but no resolution
-//            // Set initial target rotation, we will have to call this again if rotation changes
-//            // during the lifecycle of this use case
-////                .setTargetAspectRatio(screenAspectRatio)
-//            .setTargetRotation(rotation)
-//            .setTargetResolution(Size(width, width))
-//            .build()
-//            // The analyzer can then be assigned to the instance
-//            .also {
-////                it.setAnalyzer(cameraExecutor, LuminosityAnalyzer { luma ->
-////                    // Values returned from our analyzer are passed to the attached listener
-////                    // We log image analysis results here - you should do something useful
-////                    // instead!
-////
-////                    XLogger.d("Average luminosity: $luma")
-////                })
-//                val myImageAnalyzer = MyImageAnalyzer(this)
-//                it.setAnalyzer(cameraExecutor, myImageAnalyzer)
-//            }
-//
-////        val viewPort: ViewPort = previewView.viewPort!!
-
-
-        val imageAnalysis = ImageAnalysis.Builder()
+        mImageAnalysis = ImageAnalysis.Builder()
             .setOutputImageRotationEnabled(true)
 
 //            .setTargetResolution(Size(1400, 1400))
 //            .setMaxResolution(Size(2160, 2160))
 //            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build()
 
+//            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
             .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .setTargetResolution(Size(width, width))
             .build()
 
         val yuvUtils = YuvUtils()
-
         val converter = YuvToRgbConverter(this)
 
-//        imageAnalysis.setAnalyzer(cameraExecutor, ImageAnalysis.Analyzer { imageProxy ->
-//            // 进行 YUV 转 RGB 转换并旋转
-//            val rgbBitmap = yuvToRgb(imageProxy)
-//            // 应用滤镜
-//            // 在 GPUImage 视图上渲染处理后的图像
-//            mBinding.gupImage.post {
-//                mBinding.gupImage.setImage(rgbBitmap)
-//            }
-//
-//            imageProxy.close()
-//        })
-        imageAnalysis.setAnalyzer(cameraExecutor, ImageAnalysis.Analyzer { imageProxy ->
+        val rs = RenderScript.create(context)
+
+        mImageAnalysis?.setAnalyzer(cameraExecutor, ImageAnalysis.Analyzer { imageProxy ->
             if (imageProxy.image == null) return@Analyzer
-
-//            val data = ImageUtils.generateNV21Data(imageProxy.image)
-//            val width: Int = imageProxy.width
-//            val height: Int = imageProxy.height
-//            imageProxy.close()
-//            mBinding.gupImage.post {
-//                mBinding.gupImage.updatePreviewFrame(data,width,height)
-//            }
-//            return@Analyzer
-
-
             imageProxy.image?.let { image ->
+                if (image.width<=1||image.height<=1) return@Analyzer
+
                 val bitmap = allocateBitmapIfNecessary(imageProxy.width, imageProxy.height)
                 converter.yuvToRgb(image, bitmap)
                 // 顺时针旋转 Bitmap
-//                val matrix = Matrix()
-//                matrix.postRotate(90f)
-//                val rotatedBitmap =
-//                    Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-
                 imageProxy.close()
                 mBinding.gupImage.post {
                     mBinding.gupImage.setImage(bitmap)
                 }
-
-
-//                if (!mSwitchVideo){
-//                    //图片
-//                    val bitmap = allocateBitmapIfNecessary(imageProxy.width, imageProxy.height)
-//                    converter.yuvToRgb(image, bitmap)
-//
-//
-//                    // 顺时针旋转 Bitmap
-//                    val matrix = Matrix()
-//                    matrix.postRotate(90f)
-//                    val rotatedBitmap =
-//                        Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-//
-//                    imageProxy.close()
-//                    mBinding.gupImage.post {
-//                        mBinding.gupImage.setImage(rotatedBitmap)
-//                    }
-//                }else{
-//                    val bitmap = allocateBitmapIfNecessary(imageProxy.width, imageProxy.height)
-//                    converter.yuvToRgb(image, bitmap)
-//
-//                    // 顺时针旋转 Bitmap
-//                    val matrix = Matrix()
-//                    matrix.postRotate(90f)
-//                    val rotatedBitmap =
-//                        Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-//
-//                    // 应用 GPUImage 滤镜
-//                    val gpuImage = GPUImage(context)
-//                    gpuImage.setImage(rotatedBitmap)
-//                    gpuImage.setFilter(GPUImageFilter())
-//
-//                    //处理后的滤镜
-//                    val filteredBitmap =   gpuImage.bitmapWithFilterApplied
-//                    // 将 Bitmap 转换为 YUV 数据，以便写入视频文件
-//                    val yuvImage = rgbToYuv(filteredBitmap)
-//
-//                    // 将处理后的 YUV 数据写入视频文件
-//
-//
-//                }
-
-
-//                val bitmap = allocateBitmapIfNecessary(imageProxy.width, imageProxy.height)
-//                    converter.yuvToRgb(image, bitmap)
-//
-//                    // 顺时针旋转 Bitmap
-//                    val matrix = Matrix()
-//                    matrix.postRotate(90f)
-//                    val rotatedBitmap =
-//                        Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-//
-//                    // 应用 GPUImage 滤镜
-//                    val gpuImage = GPUImage(context)
-//                    gpuImage.setImage(rotatedBitmap)
-//                    gpuImage.setFilter(GPUImageFilter())
-//
-//                    //处理后的滤镜
-//                    val filteredBitmap =   gpuImage.bitmapWithFilterApplied
-//                    // 将 Bitmap 转换为 YUV 数据，以便写入视频文件
-//                    val yuvImage = rgbToYuv(filteredBitmap)
-//
-//
-//                    imageProxy.close()
-//                    mBinding.gupImage.post {
-//                        mBinding.gupImage.setImage(rotatedBitmap)
-//                    }
             }
         })
 
-//        imageAnalysis.setAnalyzer(cameraExecutor, ImageAnalysis.Analyzer {imageProxy->
-//            imageProxy.image?.also {image->
-//                if (imageProxy.format==PixelFormat.RGBA_8888){
-//                    val bitmap = allocateBitmapIfNecessary(imageProxy.width, imageProxy.height)
-//                    converter.yuvToRgb(image, bitmap)
-//                    image.close()
-//                    mBinding.viewFinder.post {
-//                        mBinding.viewFinder.setImage(bitmap)
-//                    }
-//                }else{
-//                    XLogger.d("================>${imageProxy.format}")
-//                }
-//            }
-//        })
+        val filter = CameraFilter { // 在这里实现你的滤镜效果
+            mutableListOf()
+        }
+
         // 重新绑定用例之前必须取消绑定它们
         val useCaseGroup = UseCaseGroup.Builder()
 //            .setViewPort(viewPort)
             .addUseCase(previewCase)
 //            .addUseCase(mImageCapture!!)
-            .addUseCase(imageAnalysis)
-//            .addEffect()
+            .addUseCase(mImageAnalysis)
             .build()
-        cameraProvider.unbindAll()
+        mCameraProvider.unbindAll()
 
         mCamera?.let { camera ->
             // 必须从前一个摄像机实例中删除观察者
@@ -813,8 +812,8 @@ class MainActivity : AppCompatActivity() {
 //            )
 
             //imageAnalysis, videoCapture
-            mCamera = cameraProvider.bindToLifecycle(
-                lifecycleOwner, cameraSelector, imageAnalysis, mVideoCapture
+            mCamera = mCameraProvider.bindToLifecycle(
+                lifecycleOwner, cameraSelector, mImageAnalysis, mVideoCapture
             )
 
             val camera2Control = Camera2CameraControl.from(mCamera!!.cameraControl)
@@ -824,6 +823,14 @@ class MainActivity : AppCompatActivity() {
 //                .setCaptureRequestOption(CaptureRequest.CONTROL_AE_MODE,CameraMetadata.CONTROL_AE_MODE_OFF)
 //                .build()
 //            camera2Control.captureRequestOptions = captureRequestOption
+
+            camera2Control.captureRequestOptions = CaptureRequestOptions.Builder()
+                .setCaptureRequestOption(
+                    CaptureRequest.CONTROL_AF_MODE,
+                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE
+                )
+                .build()
+
 
             val camera2CameraInfo = Camera2CameraInfo.from(mCamera!!.cameraInfo)
             val cameraCharacteristic =
@@ -1264,7 +1271,6 @@ class MainActivity : AppCompatActivity() {
     } else {
         1.0f - (1.0f - scaleFactor) * 2
     }
-
 }
 
 /** Helper type alias used for analysis use case callbacks */

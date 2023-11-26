@@ -180,7 +180,11 @@ public class GPUImageMovieWriter extends GPUImageFilter {
 
                     if (startRecordListener != null) {
                         startRecordListener.onRecordStart();
+                    }else {
+                        XLogger.d("录制 错误");
                     }
+                }else {
+                    XLogger.d("录制 错误");
                 }
             } catch (Exception e) {
 //                if (!BuildConfig.DEBUG) {
@@ -189,6 +193,7 @@ public class GPUImageMovieWriter extends GPUImageFilter {
                 if (startRecordListener != null) {
                     startRecordListener.onRecordError(e);
                 }
+                XLogger.d("录制出错："+e.getMessage());
             }
         });
     }
