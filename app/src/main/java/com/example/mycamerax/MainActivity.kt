@@ -76,6 +76,8 @@ import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilterGroup
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageGrayscaleFilter
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageSharpenFilter
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageSketchFilter
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageToneCurveFilter
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageToonFilter
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageWhiteBalanceFilter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -158,6 +160,8 @@ class MainActivity : AppCompatActivity() {
     private val mainThreadExecutor by lazy { ContextCompat.getMainExecutor(this) }
 
     lateinit var mImageAnalysis:ImageAnalysis
+    private var filter1: GPUImageBrightnessFilter?= null
+    private var filter2: GPUImageSharpenFilter?= null
 
 
     private val mScaleGestureListener =
@@ -374,6 +378,17 @@ class MainActivity : AppCompatActivity() {
             //TODO：如果是 自动对焦
             //setManualFocus(value.toInt())
         }
+        mBinding.slider1.addOnChangeListener { slider, value, fromUser ->
+            filter1?.setBrightness(range(value.toInt(), -1.0f, 1.0f))
+            //filterAdjuster
+        }
+
+
+
+        mBinding.slider2.addOnChangeListener { slider, value, fromUser ->
+            //setManualFocus(value.toInt())
+            filter2?.setSharpness(range(value.toInt(), -1.0f, 1.0f))
+        }
 
         mBinding.btnBrightness.setOnClickListener {
             val group = GPUImageFilterGroup()
@@ -384,6 +399,18 @@ class MainActivity : AppCompatActivity() {
 
             switchFilterTo(filter)
         }
+        mBinding.toneBrightness.setOnClickListener {
+            val group = GPUImageFilterGroup()
+             filter1 = GPUImageBrightnessFilter()
+            filter2 = GPUImageSharpenFilter()
+            group.addFilter(filter1)
+            group.addFilter(filter2)
+            group.addFilter(mGPUImageMovieWriter)
+            mGPUImageFilterGroup = group
+
+            switchFilterTo(group)
+        }
+
 
         mBinding.btnTone.setOnClickListener {
             //TODO:白平衡的处理
@@ -527,6 +554,13 @@ class MainActivity : AppCompatActivity() {
     fun refreshGalleryFile(){
 
 
+    }
+  fun   range(percentage: Int, start: Float, end: Float): Float {
+        return (end - start) * percentage / 100.0f + start
+    }
+
+     fun range(percentage: Int, start: Int, end: Int): Int {
+        return (end - start) * percentage / 100 + start
     }
 
     private fun startRecordByGpuImageWrite() {
