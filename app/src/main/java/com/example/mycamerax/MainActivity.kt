@@ -16,6 +16,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.renderscript.RenderScript
 import android.util.Log
+import android.util.Range
 import android.util.Size
 import android.view.Display
 import android.view.LayoutInflater
@@ -24,6 +25,7 @@ import android.view.OrientationEventListener
 import android.view.ScaleGestureDetector
 import android.view.Surface
 import android.view.ViewGroup
+import android.widget.SeekBar
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.camera2.interop.Camera2CameraControl
@@ -204,7 +206,7 @@ class MainActivity : AppCompatActivity() {
             {
                 mCameraProvider = cameraProviderFuture.get()
                 bindCameraUseCases(this@MainActivity, this@MainActivity)
-                queryCameraInfo(this@MainActivity,mCameraProvider)
+                queryCameraInfo(this@MainActivity, mCameraProvider)
             },
             mainThreadExecutor
         )
@@ -279,8 +281,175 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    fun getValue(max: Long, min: Long, sliderMax: Float, sliderMin: Float, progress: Float):Long {
+        val slope = (max - min) / (sliderMax - sliderMin)
+        val intercept = min - slope * sliderMin
+        return  (slope * progress + intercept).toLong()
+    }
+
+    @SuppressLint("UnsafeOptInUsageError", "RestrictedApi")
+    fun changeCompensation(progress:Float){
+        //如果不支持曝光补偿
+        if (mCamera?.cameraInfo?.exposureState?.isExposureCompensationSupported != true) {
+            return
+        }
+
+        val cameraInfo = mCamera?.cameraInfo ?: return
+        val cameraControl = mCamera?.cameraControl ?: return
+
+        val exposureRange = cameraInfo.exposureState.exposureCompensationRange
+        val brightness =
+            getValue(exposureRange.upper.toLong(), exposureRange.lower.toLong(), 100f, 1f, progress)
+        val camera2CameraControl = Camera2CameraControl.from(cameraControl)
+        XLogger.d("other device set camera exposure value progress:${progress} lower:${exposureRange.lower} upper:${exposureRange.upper}  brightness:$brightness")
+        // 其他的设备开启自动曝光补偿 并且设置 曝光补偿指数
+        camera2CameraControl.addCaptureRequestOptions(
+            CaptureRequestOptions.Builder()
+                .setCaptureRequestOption(
+                    CaptureRequest.CONTROL_AWB_MODE,
+                    CaptureRequest.CONTROL_AWB_MODE_AUTO,
+                )
+                .setCaptureRequestOption(
+                    CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON
+                ).build()
+        )
+        XLogger.d("setBrightness----->other:$brightness")
+        cameraControl.setExposureCompensationIndex(brightness.toInt())
+    }
+
+
+    @SuppressLint("UnsafeOptInUsageError", "RestrictedApi")
+    fun exposureTime(progress: Float){
+        if (mCamera?.cameraInfo?.exposureState?.isExposureCompensationSupported != true) {
+            return
+        }
+
+        val cameraInfo = mCamera?.cameraInfo ?: return
+        val cameraControl = mCamera?.cameraControl ?: return
+
+        val characteristics: CameraCharacteristics =
+            Camera2CameraInfo.extractCameraCharacteristics(cameraInfo)
+
+        val manualRange: Range<Long>? = characteristics.get<Range<Long>>(
+            CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE
+        )
+        if (manualRange != null) {
+            //setIso(1, characteristics)
+            //曝光值的大小
+            val min = manualRange.lower
+            var max = manualRange.upper
+
+            //0.01秒
+            if (max > 10000000) {
+                max = 10000000
+            }
+
+            var exposureTime = getValue(max, min, 100f, 1f, progress)
+            if (exposureTime > max) {
+                exposureTime = max
+            }
+
+
+            val camera2CameraControl = Camera2CameraControl.from(cameraControl)
+            XLogger.d("box device set camera support EXPOSURE_TIME_RANGE min:$min max:${max} upper:${manualRange.upper} ae:$exposureTime")
+
+            //关闭曝光 并且设置曝光值为
+            val captureRequestOptions = CaptureRequestOptions.Builder()
+                .setCaptureRequestOption(
+                    CaptureRequest.CONTROL_AWB_MODE,
+                    CaptureRequest.CONTROL_AWB_MODE_AUTO,
+                )
+                .setCaptureRequestOption(
+                    CaptureRequest.CONTROL_AE_MODE,
+                    CameraMetadata.CONTROL_AE_MODE_OFF
+                )
+                .setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, exposureTime)
+                .build()
+            camera2CameraControl.addCaptureRequestOptions(captureRequestOptions)
+        } else {
+            XLogger.d("不支持 SENSOR_EXPOSURE_TIME")
+        }
+    }
+    @SuppressLint("UnsafeOptInUsageError", "RestrictedApi")
+    fun setISO(progress: Float){
+        val cameraInfo = mCamera?.cameraInfo ?: return
+        val characteristics: CameraCharacteristics =
+            Camera2CameraInfo.extractCameraCharacteristics(cameraInfo)
+        mCamera?.let { camera ->
+            val range = characteristics.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE)
+                ?: return
+
+            val min = range.lower //100
+            val max = range.upper //10000
+            val iso = getValue(
+                max = max.toLong(),
+                min = min.toLong(),
+                sliderMax = 100f,
+                sliderMin = 0f,
+                progress.toFloat()
+            )
+
+            XLogger.d("box device set camera support ISO min:$min max:${max}  iso:$iso")
+            val camera2CameraControl = Camera2CameraControl.from(camera.cameraControl)
+
+            val captureRequestOptions =  CaptureRequestOptions.Builder()
+                .setCaptureRequestOption(
+                    CaptureRequest.CONTROL_AWB_MODE,
+                    CaptureRequest.CONTROL_AWB_MODE_AUTO,
+                )
+                .setCaptureRequestOption(
+                    CaptureRequest.SENSOR_SENSITIVITY, iso.toInt()
+                ).build()
+            camera2CameraControl.addCaptureRequestOptions(captureRequestOptions)
+        }
+    }
 
     fun clickListener() {
+        mBinding.compensationSeekBar.setOnSeekBarChangeListener(object :SeekBar.OnSeekBarChangeListener{
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                changeCompensation(progress = progress.toFloat())
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+
+            }
+
+        })
+
+        mBinding.exposureTimeSeekBar.setOnSeekBarChangeListener(object :SeekBar.OnSeekBarChangeListener{
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                exposureTime(progress = progress.toFloat())
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+
+            }
+
+        })
+
+        mBinding.isoSeekBar.setOnSeekBarChangeListener(object :SeekBar.OnSeekBarChangeListener{
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                setISO(progress = progress.toFloat())
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+
+            }
+
+        })
+
 
         mBinding.btnPhoto.setOnClickListener {
             mSwitchVideo = true
@@ -724,11 +893,9 @@ class MainActivity : AppCompatActivity() {
 
 //            .setCaptureRequestOption(CaptureRequest.SENSOR_EXPOSURE_TIME, ...);
         val previewCase = previewBuilder.build()
-
             .also {
                 // 附加取景器的表面提供程序以预览用例
-//                mBinding.viewFinder.
-//                it.setSurfaceProvider(mBinding.viewFinder.surfaceProvider)
+                //it.setSurfaceProvider(mBinding.viewFinder.surfaceProvider)
             }
 
         val selector = QualitySelector
@@ -806,7 +973,7 @@ class MainActivity : AppCompatActivity() {
 
         val rs = RenderScript.create(context)
 
-        mImageAnalysis?.setAnalyzer(cameraExecutor, ImageAnalysis.Analyzer { imageProxy ->
+        mImageAnalysis.setAnalyzer(cameraExecutor, ImageAnalysis.Analyzer { imageProxy ->
             if (imageProxy.image == null) return@Analyzer
             imageProxy.image?.let { image ->
                 if (image.width<=1||image.height<=1) return@Analyzer
@@ -827,10 +994,10 @@ class MainActivity : AppCompatActivity() {
 
         // 重新绑定用例之前必须取消绑定它们
         val useCaseGroup = UseCaseGroup.Builder()
-//            .setViewPort(viewPort)
+            .setViewPort(mBinding.viewFinder.viewPort!!)
             .addUseCase(previewCase)
-//            .addUseCase(mImageCapture!!)
-            .addUseCase(mImageAnalysis)
+            .addUseCase(mImageCapture!!)
+//            .addUseCase(mVideoCapture)
             .build()
         mCameraProvider.unbindAll()
 
@@ -847,7 +1014,14 @@ class MainActivity : AppCompatActivity() {
 
             //imageAnalysis, videoCapture
             mCamera = mCameraProvider.bindToLifecycle(
-                lifecycleOwner, cameraSelector, mImageAnalysis, mVideoCapture
+                lifecycleOwner,
+                cameraSelector,
+//                useCaseGroup,
+
+                previewCase,
+                mImageAnalysis,
+                mVideoCapture,
+                mImageCapture,
             )
 
             val camera2Control = Camera2CameraControl.from(mCamera!!.cameraControl)
