@@ -6,4 +6,13 @@
     </style>
 
     <style name="Theme.MyCameraX" parent="Base.Theme.MyCameraX" />
+
+    <style name="SeekBarTheme" parent="Widget.AppCompat.SeekBar">
+    </style>
+
+    <style name="Divider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">0.5dp</item>
+        <item name="android:background">#fff</item>
+    </style>
 </resources>

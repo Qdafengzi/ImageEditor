@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">MyCameraX</string>
+    <string name="test"><![CDATA[1. URL LINK & WORKSPACE]]> </string>
 </resources>

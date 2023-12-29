@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.storage.CacheResetOnProcessCanceled.enabled
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -105,6 +103,8 @@ dependencies {
 
     implementation ("com.github.bumptech.glide:glide:4.13.2")
     kapt ("com.github.bumptech.glide:compiler:4.13.2")
+
+    implementation ("androidx.constraintlayout:constraintlayout-compose:1.0.1")
 
 //    implementation ("com.wefika:flowlayout:0.4.1")
 }

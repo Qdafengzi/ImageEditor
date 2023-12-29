@@ -5,7 +5,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraMetadata
@@ -27,6 +26,7 @@ import android.view.Surface
 import android.view.ViewGroup
 import android.widget.SeekBar
 import androidx.activity.compose.setContent
+import androidx.annotation.DrawableRes
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.camera2.interop.Camera2CameraControl
@@ -63,59 +63,42 @@ import androidx.camera.video.VideoRecordEvent
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
-import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.rotateBy
-import androidx.compose.foundation.gestures.transformable
-import androidx.compose.foundation.gestures.zoomBy
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.input.pointer.positionChange
-import androidx.compose.ui.input.pointer.positionChanged
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.util.Consumer
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.example.mycamerax.databinding.ActivityMainBinding
+import com.example.mycamerax.edit.ImageEditor
+import com.example.mycamerax.utils.ResUtils
 import com.google.android.material.slider.Slider.OnChangeListener
 import com.theeasiestway.yuv.YuvUtils
 import jp.co.cyberagent.android.gpuimage.GPUImage
@@ -209,9 +192,9 @@ class MainActivity : AppCompatActivity() {
 
     private val mainThreadExecutor by lazy { ContextCompat.getMainExecutor(this) }
 
-    lateinit var mImageAnalysis:ImageAnalysis
-    private var filter1: GPUImageBrightnessFilter?= null
-    private var filter2: GPUImageSharpenFilter?= null
+    lateinit var mImageAnalysis: ImageAnalysis
+    private var filter1: GPUImageBrightnessFilter? = null
+    private var filter2: GPUImageSharpenFilter? = null
 
 
     private val mScaleGestureListener =
@@ -250,235 +233,252 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         //initView()
         setContent {
-            ImageEditorWithRectangularText()
+//            ImageEditorWithRectangularText()
+//            TextTest()
+
+//            ScalableImage(R.mipmap.icon11)
+            ImageEditor()
+//            ScalableImage3333(R.mipmap.icon11)
+//            ScalableImage3333()
+//            ScalableImage(R.mipmap.icon11,R.mipmap.icon11)
         }
     }
 
 
     @Composable
-    fun ImageEditorWithRectangularText() {
-        val pxValue = LocalDensity.current.run { 1.dp.toPx() }
-        val paddingValue = LocalDensity.current.run { 10.dp.toPx() }
-
-        val textContent = remember() {
-            mutableStateOf("哈哈哈哇哈哈哈")
-        }
-        val rotationAngle = remember() {
-            mutableStateOf(0f)
-        }
-
-        val minScale = 0.5f
-        val maxScale = 2f
+    fun ScalableImage444(@DrawableRes imageRes: Int) {
         var scale by remember { mutableStateOf(1f) }
-
-        val hide = remember {
-            mutableStateOf(false)
-        }
-
-        val imageBitmap = BitmapFactory.decodeResource(
-            this.resources,
-            R.mipmap.icon11
-        ).asImageBitmap()
-
-
-        val scope = rememberCoroutineScope()
-
-        // 0 缩放 1 旋转
-        var type = remember {
-            mutableStateOf(0)
-        }
-
-        //字体大小
-        val fontSize  = remember {
-            derivedStateOf {
-                scale*20
-            }
-        }
-
-        val canScale = remember {
-            derivedStateOf {
-                fontSize.value>8f && fontSize.value<30f
-            }
-        }
-
-
-
-        var center by remember {
-            mutableStateOf(IntOffset(0,0))
-        }
-
-        var isRotating by remember { mutableStateOf(false) }
-
-        val transformState = rememberTransformableState { zoomChange, panChange, rotationChange ->
-            XLogger.d("zoomChange:$zoomChange  rotationChange:${rotationChange}  panChange:${panChange.y}")
-            if (type.value == 0) {
-                scale += (zoomChange / 10) * 0.1f
-            } else {
-                rotationAngle.value = rotationAngle.value + (rotationChange) * 10f
-            }
-        }
-
-
-        var offsetX by remember { mutableStateOf(0f) }
-        var offsetY by remember { mutableStateOf(0f) }
-
-
-        var initialTouchPosition by remember { mutableStateOf(Offset.Zero) }
-        var initialAngle by remember { mutableStateOf(0f) }
-
-
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f)
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            Image(
-                bitmap = imageBitmap,
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize()
+            Layout(
+                content = {
+                    Image(
+                        painter = painterResource(imageRes),
+                        contentDescription = null,
+                        modifier = Modifier.scale(scale)
+                    )
+                    Image(
+                        painter = painterResource(R.drawable.ic_editor_scale),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .pointerInput(Unit) {
+                                detectDragGestures { change, _ ->
+                                    val newScale =
+                                        scale * (1 + change.positionChange().y / size.height)
+                                    scale = if (newScale <= 0.1) 0.1f else newScale
+                                }
+                            }
+                    )
+                },
+                measurePolicy = { measurables, constraints ->
+                    val imagePlaceable =
+                        measurables[0].measure(constraints.copy(minWidth = 0, minHeight = 0))
+                    val arrowPlaceable =
+                        measurables[1].measure(constraints.copy(minWidth = 0, minHeight = 0))
+                    val width = (imagePlaceable.width * scale).roundToInt()
+                    val height = (imagePlaceable.height * scale).roundToInt()
+                    val imageOffsetX = (width - imagePlaceable.width) / 2
+                    val imageOffsetY = (height - imagePlaceable.height) / 2
+                    val arrowX = width - arrowPlaceable.width
+                    val arrowY = height - arrowPlaceable.height
+                    layout(width, height) {
+                        imagePlaceable.place(0, 0)
+                        arrowPlaceable.place(arrowX, arrowY)
+                    }
+                }
             )
         }
+    }
 
-        if (!hide.value){
+
+    val padding = ResUtils.dp2px(20f)
+
+
+    val rootImageSize = ResUtils.dp2px(40f)
+    @Composable
+    fun ScalableImage3333() {
+        val screenWidthDp = LocalConfiguration.current.screenWidthDp
+        val maxScale = screenWidthDp / 40f
+        var scale by remember { mutableStateOf(1f) }
+        val scaleArrowPosition = remember { mutableStateOf(Offset(0f, 0f)) }
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            ConstraintLayout(modifier = Modifier.wrapContentSize(),) {
+                val (box, scaleIcon) = createRefs()
+                Image(
+                    painter = painterResource(R.mipmap.icon11),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .scale(scale = scale)
+                        .onGloballyPositioned {
+                            // 获取图片的位置和大小信息
+                            val scaleArrowX = it.size.width * scale - rootImageSize * (1 + scale)
+                            val scaleArrowY = it.size.height * scale - rootImageSize * (1 + scale)
+                            scaleArrowPosition.value = Offset(scaleArrowX, scaleArrowY)
+                        }
+                        .constrainAs(box) {
+                        }
+                )
+
+                Image(
+                    painter = painterResource(R.drawable.ic_editor_scale),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .offset {
+                            IntOffset(scaleArrowPosition.value.x.toInt(), scaleArrowPosition.value.y.toInt())
+                        }
+                        .constrainAs(scaleIcon) {
+                            end.linkTo(box.end)
+                            bottom.linkTo(box.bottom)
+                        }
+                        .pointerInput(Unit) {
+                            detectDragGestures { change, _ ->
+                                val newScale = scale * (1 + change.positionChange().y / this.size.height)
+                                scale = newScale.coerceIn(0.1f, maxScale) // 限制scale的取值范围
+                                XLogger.d("scale: $scale")
+                            }
+                        }
+                )
+            }
+        }
+    }
+
+    @Composable
+    fun ScalableImage222() {
+        var scale by remember { mutableStateOf(1f) }
+        var size by remember { mutableStateOf(40.dp) } // 初始图片大小
+
+        val sizeState = remember {
+            mutableStateOf(
+                Size(
+                    ResUtils.dp2px(40f).toFloat(),
+                    ResUtils.dp2px(40f).toFloat()
+                )
+            )
+        }
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            ConstraintLayout(
+                modifier = Modifier
+                    .wrapContentSize(),
+            ) {
+                val (box, scaleIcon) = createRefs()
+                Image(
+                    painter = painterResource(R.mipmap.ic_editor),
+                    contentDescription = null,
+                    modifier = Modifier
+//                        .size(40.dp)
+//                        .size(size) // 根据状态改变图片大小
+                        .graphicsLayer(
+                            scaleX = sizeState.value.width / 100f, // 根据状态改变图片的宽度
+                            scaleY = sizeState.value.height / 100f, // 根据状态改变图片的高度
+                            transformOrigin = TransformOrigin(0.5f, 0.5f) // 设置变换的中心点为图片的中心
+                        )
+
+                        .constrainAs(box) {
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                            top.linkTo(parent.top)
+                            bottom.linkTo(parent.bottom)
+                        }
+                )
+
+                Image(
+                    painter = painterResource(R.drawable.ic_editor_scale),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .constrainAs(scaleIcon) {
+                            end.linkTo(box.end)
+                            bottom.linkTo(box.bottom)
+                        }
+                        .pointerInput(Unit) {
+                            detectDragGestures { change, _ ->
+                                val newScale =
+                                    scale * (1 + change.positionChange().y / this.size.height)
+                                scale = if (newScale <= 0.1) {
+                                    0.1f
+                                } else if (newScale >= 5f) {
+                                    2f
+                                } else {
+                                    newScale
+                                }
+                                size *= scale // 更新图片大小状态
+                                XLogger.d("scale: ${scale}")
+                            }
+                        }
+                )
+            }
+        }
+    }
+
+
+    @Composable
+    fun ScalableImage() {
+        var scale by remember { mutableStateOf(1f) }
+        val arrowPosition = remember { mutableStateOf(Offset(0f, 0f)) }
+
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
             Box(
                 modifier = Modifier
                     .wrapContentSize()
-                    .offset {
-                        IntOffset(offsetX.roundToInt(), offsetY.roundToInt())
-                    }
-                    .graphicsLayer {
-                        rotationZ = rotationAngle.value
-                        scaleX = scale
-                        scaleY = scale
-                        transformOrigin = TransformOrigin.Center
-
-
-                    }
-                    .transformable(state = transformState)
-                    .drawBehind {
-                        drawRect(
-                            color = Color(0xFF0099A1),
-                            style = Stroke(width = pxValue),
-                            topLeft = Offset(paddingValue, paddingValue),
-                            size = Size(
-                                this.size.width - 2 * paddingValue,
-                                this.size.height - 2 * paddingValue
-                            )
-                        )
-                    }
-                    .onSizeChanged {
-                        XLogger.d("拖动--------->size change ${it.center}")
-                        if (type.value==0){
-                            return@onSizeChanged
-                        }
-                        center = it.center
-                    }
+                    .padding(20.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = textContent.value,
+                Image(
+                    painter = painterResource(R.mipmap.ic_editor),
+                    contentDescription = null,
                     modifier = Modifier
-                        .wrapContentSize()
-                        .padding(10.dp)
-                        .align(Alignment.Center)
-                        .pointerInput(Unit) {
-                            XLogger.d("拖动 offset---------->")
-                            detectDragGestures { change, dragAmount ->
-                                offsetX += dragAmount.x
-                                offsetY += dragAmount.y
-                            }
+                        .graphicsLayer(
+                            scaleX = scale,
+                            scaleY = scale,
+                            transformOrigin = TransformOrigin.Center
+                        )
+                        .onGloballyPositioned { layoutCoordinates ->
+                            val arrowX = layoutCoordinates.size.width * scale
+                            val arrowY = layoutCoordinates.size.height * scale
+                            arrowPosition.value = Offset(arrowX, arrowY)
                         }
-                    ,
-                    color =  Color.Black,
-                    fontSize = (fontSize.value).sp,
-
-                    )
-                Image(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .clickable(onClick = {
-                            hide.value = true
-                        })
-                    ,
-                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_editor_delete),
-                    contentDescription = "delete"
                 )
+
                 Image(
+                    painter = painterResource(R.drawable.ic_editor_scale),
+                    contentDescription = null,
                     modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .pointerInput(Unit) {
-                            detectDragGestures(
-                                onDragStart = { offset ->
-                                    initialAngle = calculateAngle(offset.x, offset.y, center.x.toFloat(), center.y.toFloat())
-
-                                },
-                                onDrag = { change, _ ->
-                                    val rotationCurrentAngle = calculateAngle(
-                                        change.position.x,
-                                        change.position.y,
-                                        center.x.toFloat(),
-                                        center.y.toFloat()
-                                    )
-                                    val rotationDelta = rotationCurrentAngle - initialAngle
-                                    rotationAngle.value += rotationDelta
-                                },
-                                onDragEnd = {
-
-                                }
+                        .size(20.dp)
+                        .offset {
+                            IntOffset(
+                                arrowPosition.value.x.toInt(),
+                                arrowPosition.value.y.toInt()
                             )
                         }
-                    ,
-                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_editor_rotate),
-                    contentDescription = "rotate"
-                )
-
-
-                Image(modifier = Modifier
-                    .align(Alignment.BottomEnd)
-//                    .pointerInput(Unit) {
-//                        detectTransformGestures(
-//                            onGesture = { _, pan, zoom, rotation ->
-//                                type.value = 0
-//                                scale *= zoom
-//                                scale = scale.coerceIn(minScale, maxScale)
-//                            }
-//                        )
-//                     }
-                    .pointerInput(Unit) {
-
-                        detectTransformGestures(
-                            onGesture = { centroid: Offset, pan: Offset, zoom: Float, rotation: Float ->
-                                scope.launch {
-                                    type.value = 0
-                                    XLogger.d("zoom======${zoom}=====>y:${pan.y}  x:${pan.x}")
-                                    transformState.zoomBy(pan.x)
-                                }
+                        .pointerInput(Unit) {
+                            detectDragGestures { change, _ ->
+                                val newScale =
+                                    scale * (1 + change.positionChange().y / this.size.height)
+                                scale = if (newScale <= 0.1) 0.1f else newScale
                             }
-                        )
-                    }
-                    ,
-                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_editor_scale),
-                    contentDescription = "scale"
+                        }
                 )
             }
         }
     }
 
-
-    private fun calculateAngle(x: Float, y: Float,width:Float,height: Float): Float {
-        val centerX = (width ) / 2f
-        val centerY = (height) / 2f
-
-        val dx = x - centerX
-        val dy = y - centerY
-
-        return Math.toDegrees(Math.atan2(dy.toDouble(), dx.toDouble())).toFloat()
-    }
 
     private val Offset.angle: Float
         get() = Math.toDegrees(Math.atan2(y.toDouble(), x.toDouble())).toFloat()
 
 
-    fun initView(){
+    fun initView() {
         setContentView(mBinding.root)
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         cameraProviderFuture.addListener(
@@ -503,7 +503,10 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun queryCameraInfo(lifecycleOwner: LifecycleOwner, cameraProvider: ProcessCameraProvider) {
+    private fun queryCameraInfo(
+        lifecycleOwner: LifecycleOwner,
+        cameraProvider: ProcessCameraProvider
+    ) {
         val cameraLensInfo = HashMap<Int, CameraInfo>()
         arrayOf(CameraSelector.LENS_FACING_BACK, CameraSelector.LENS_FACING_FRONT).forEach { lens ->
             val cameraSelector = CameraSelector.Builder().requireLensFacing(lens).build()
@@ -520,9 +523,11 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private val myCameraInfo:MCameraInfo= MCameraInfo()
-    private class MCameraInfo:CameraInitListener{
-        @OptIn(ExperimentalZeroShutterLag::class) @SuppressLint("RestrictedApi")
+    private val myCameraInfo: MCameraInfo = MCameraInfo()
+
+    private class MCameraInfo : CameraInitListener {
+        @OptIn(ExperimentalZeroShutterLag::class)
+        @SuppressLint("RestrictedApi")
         override fun onInitialised(cameraLensInfo: HashMap<Int, CameraInfo>) {
             cameraLensInfo.forEach { t, u ->
                 XLogger.d("t:${t} u:${u.zoomState}")
@@ -554,20 +559,19 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
     interface CameraInitListener {
         fun onInitialised(cameraLensInfo: HashMap<Int, CameraInfo>)
     }
 
 
-    fun getValue(max: Long, min: Long, sliderMax: Float, sliderMin: Float, progress: Float):Long {
+    fun getValue(max: Long, min: Long, sliderMax: Float, sliderMin: Float, progress: Float): Long {
         val slope = (max - min) / (sliderMax - sliderMin)
         val intercept = min - slope * sliderMin
-        return  (slope * progress + intercept).toLong()
+        return (slope * progress + intercept).toLong()
     }
 
     @SuppressLint("UnsafeOptInUsageError", "RestrictedApi")
-    fun changeCompensation(progress:Float){
+    fun changeCompensation(progress: Float) {
         //如果不支持曝光补偿
         if (mCamera?.cameraInfo?.exposureState?.isExposureCompensationSupported != true) {
             return
@@ -598,7 +602,7 @@ class MainActivity : AppCompatActivity() {
 
 
     @SuppressLint("UnsafeOptInUsageError", "RestrictedApi")
-    fun exposureTime(progress: Float){
+    fun exposureTime(progress: Float) {
         if (mCamera?.cameraInfo?.exposureState?.isExposureCompensationSupported != true) {
             return
         }
@@ -649,8 +653,9 @@ class MainActivity : AppCompatActivity() {
             XLogger.d("不支持 SENSOR_EXPOSURE_TIME")
         }
     }
+
     @SuppressLint("UnsafeOptInUsageError", "RestrictedApi")
-    fun setISO(progress: Float){
+    fun setISO(progress: Float) {
         val cameraInfo = mCamera?.cameraInfo ?: return
         val characteristics: CameraCharacteristics =
             Camera2CameraInfo.extractCameraCharacteristics(cameraInfo)
@@ -671,7 +676,7 @@ class MainActivity : AppCompatActivity() {
             XLogger.d("box device set camera support ISO min:$min max:${max}  iso:$iso")
             val camera2CameraControl = Camera2CameraControl.from(camera.cameraControl)
 
-            val captureRequestOptions =  CaptureRequestOptions.Builder()
+            val captureRequestOptions = CaptureRequestOptions.Builder()
                 .setCaptureRequestOption(
                     CaptureRequest.CONTROL_AWB_MODE,
                     CaptureRequest.CONTROL_AWB_MODE_AUTO,
@@ -684,7 +689,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun clickListener() {
-        mBinding.compensationSeekBar.setOnSeekBarChangeListener(object :SeekBar.OnSeekBarChangeListener{
+        mBinding.compensationSeekBar.setOnSeekBarChangeListener(object :
+            SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 changeCompensation(progress = progress.toFloat())
             }
@@ -699,7 +705,8 @@ class MainActivity : AppCompatActivity() {
 
         })
 
-        mBinding.exposureTimeSeekBar.setOnSeekBarChangeListener(object :SeekBar.OnSeekBarChangeListener{
+        mBinding.exposureTimeSeekBar.setOnSeekBarChangeListener(object :
+            SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 exposureTime(progress = progress.toFloat())
             }
@@ -714,7 +721,7 @@ class MainActivity : AppCompatActivity() {
 
         })
 
-        mBinding.isoSeekBar.setOnSeekBarChangeListener(object :SeekBar.OnSeekBarChangeListener{
+        mBinding.isoSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 setISO(progress = progress.toFloat())
             }
@@ -852,7 +859,7 @@ class MainActivity : AppCompatActivity() {
         }
         mBinding.toneBrightness.setOnClickListener {
             val group = GPUImageFilterGroup()
-             filter1 = GPUImageBrightnessFilter()
+            filter1 = GPUImageBrightnessFilter()
             filter2 = GPUImageSharpenFilter()
             group.addFilter(filter1)
             group.addFilter(filter2)
@@ -967,14 +974,14 @@ class MainActivity : AppCompatActivity() {
 //                mBinding.btnVideo.text = "start"
                 mSwitchVideo = true
                 mIsRecording = true
-                 startRecording()
+                startRecording()
 //                startRecordByGpuImageWrite()
                 startRecordTimer()
             }
         }
 
         mBinding.jump.setOnClickListener {
-            startActivity(Intent(this,SecondActivity::class.java))
+            startActivity(Intent(this, SecondActivity::class.java))
         }
     }
 
@@ -1002,15 +1009,16 @@ class MainActivity : AppCompatActivity() {
 //        }
 //    }
 
-    fun refreshGalleryFile(){
+    fun refreshGalleryFile() {
 
 
     }
-  fun   range(percentage: Int, start: Float, end: Float): Float {
+
+    fun range(percentage: Int, start: Float, end: Float): Float {
         return (end - start) * percentage / 100.0f + start
     }
 
-     fun range(percentage: Int, start: Int, end: Int): Int {
+    fun range(percentage: Int, start: Int, end: Int): Int {
         return (end - start) * percentage / 100 + start
     }
 
@@ -1020,9 +1028,10 @@ class MainActivity : AppCompatActivity() {
                 SimpleDateFormat(FILENAME_FORMAT, Locale.US)
                     .format(System.currentTimeMillis()) + ".mp4"
 
-        val downloadFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val downloadFolder =
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
 
-        val filePath = File(downloadFolder.absolutePath,name)
+        val filePath = File(downloadFolder.absolutePath, name)
 
         mGPUImageMovieWriter.prepareRecording(
             filePath.absolutePath,
@@ -1070,7 +1079,8 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    @OptIn(ExperimentalGetImage::class) @SuppressLint("MissingPermission")
+    @OptIn(ExperimentalGetImage::class)
+    @SuppressLint("MissingPermission")
     private fun startRecording() {
         // create MediaStoreOutputOptions for our recorder: resulting our recording!
         val name = "CameraX-recording-" +
@@ -1101,7 +1111,6 @@ class MainActivity : AppCompatActivity() {
 
 
     }
-
 
 
     /**
@@ -1143,7 +1152,7 @@ class MainActivity : AppCompatActivity() {
 
         XLogger.d("=============>${rotationDegrees}")
 
-        if (!this::mCameraProvider.isInitialized ) return
+        if (!this::mCameraProvider.isInitialized) return
 
 //        val build = Preview.Builder()
 //        Camera2Interop.Extender(build).setCaptureRequestOption("")
@@ -1258,7 +1267,7 @@ class MainActivity : AppCompatActivity() {
         mImageAnalysis.setAnalyzer(cameraExecutor, ImageAnalysis.Analyzer { imageProxy ->
             if (imageProxy.image == null) return@Analyzer
             imageProxy.image?.let { image ->
-                if (image.width<=1||image.height<=1) return@Analyzer
+                if (image.width <= 1 || image.height <= 1) return@Analyzer
 
                 val bitmap = allocateBitmapIfNecessary(imageProxy.width, imageProxy.height)
                 converter.yuvToRgb(image, bitmap)
