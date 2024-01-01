@@ -26,7 +26,6 @@ import android.view.Surface
 import android.view.ViewGroup
 import android.widget.SeekBar
 import androidx.activity.compose.setContent
-import androidx.annotation.DrawableRes
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.camera2.interop.Camera2CameraControl
@@ -70,6 +69,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material.Text
+import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -77,7 +78,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.TransformOrigin
@@ -86,7 +86,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -234,19 +233,32 @@ class MainActivity : AppCompatActivity() {
         //initView()
         setContent {
 //            ImageEditorWithRectangularText()
-//            TextTest()
-
-//            ScalableImage(R.mipmap.icon11)
             ImageEditor()
-//            ScalableImage3333(R.mipmap.icon11)
+//            ScaleWithFixedButtonsExample()
+//            ViewStyle()
+//            ScalableImage5()
 //            ScalableImage3333()
-//            ScalableImage(R.mipmap.icon11,R.mipmap.icon11)
+
+
         }
+    }
+
+    @Composable
+    fun ViewStyle() {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Button(onClick = {
+                val intent = Intent(this@MainActivity, ViewActivity::class.java)
+                startActivity(intent)
+            }) {
+                Text(text = "View")
+            }
+        }
+
     }
 
 
     @Composable
-    fun ScalableImage444(@DrawableRes imageRes: Int) {
+    fun ScalableImage444() {
         var scale by remember { mutableStateOf(1f) }
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -255,9 +267,14 @@ class MainActivity : AppCompatActivity() {
             Layout(
                 content = {
                     Image(
-                        painter = painterResource(imageRes),
+                        painter = painterResource(R.mipmap.ic_editor),
                         contentDescription = null,
-                        modifier = Modifier.scale(scale)
+                        modifier = Modifier
+                            .graphicsLayer {
+                                transformOrigin = TransformOrigin.Center
+                                scaleX = scale
+                                scaleY = scale
+                            }
                     )
                     Image(
                         painter = painterResource(R.drawable.ic_editor_scale),
@@ -274,19 +291,27 @@ class MainActivity : AppCompatActivity() {
                     )
                 },
                 measurePolicy = { measurables, constraints ->
+                    XLogger.d("------>")
+                    // 在这里进行测量和放置子元素的逻辑
                     val imagePlaceable =
                         measurables[0].measure(constraints.copy(minWidth = 0, minHeight = 0))
                     val arrowPlaceable =
                         measurables[1].measure(constraints.copy(minWidth = 0, minHeight = 0))
+
                     val width = (imagePlaceable.width * scale).roundToInt()
                     val height = (imagePlaceable.height * scale).roundToInt()
-                    val imageOffsetX = (width - imagePlaceable.width) / 2
-                    val imageOffsetY = (height - imagePlaceable.height) / 2
-                    val arrowX = width - arrowPlaceable.width
-                    val arrowY = height - arrowPlaceable.height
+
+
+//                    val imageOffsetX = (width - imagePlaceable.width) / 2
+//                    val imageOffsetY = (height - imagePlaceable.height) / 2
+//                    val arrowX = width - arrowPlaceable.width
+//                    val arrowY = height - arrowPlaceable.height
                     layout(width, height) {
                         imagePlaceable.place(0, 0)
-                        arrowPlaceable.place(arrowX, arrowY)
+                        arrowPlaceable.place(
+                            width,
+                            height
+                        )
                     }
                 }
             )
@@ -298,54 +323,7 @@ class MainActivity : AppCompatActivity() {
 
 
     val rootImageSize = ResUtils.dp2px(40f)
-    @Composable
-    fun ScalableImage3333() {
-        val screenWidthDp = LocalConfiguration.current.screenWidthDp
-        val maxScale = screenWidthDp / 40f
-        var scale by remember { mutableStateOf(1f) }
-        val scaleArrowPosition = remember { mutableStateOf(Offset(0f, 0f)) }
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            ConstraintLayout(modifier = Modifier.wrapContentSize(),) {
-                val (box, scaleIcon) = createRefs()
-                Image(
-                    painter = painterResource(R.mipmap.icon11),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .wrapContentSize()
-                        .scale(scale = scale)
-                        .onGloballyPositioned {
-                            // 获取图片的位置和大小信息
-                            val scaleArrowX = it.size.width * scale - rootImageSize * (1 + scale)
-                            val scaleArrowY = it.size.height * scale - rootImageSize * (1 + scale)
-                            scaleArrowPosition.value = Offset(scaleArrowX, scaleArrowY)
-                        }
-                        .constrainAs(box) {
-                        }
-                )
 
-                Image(
-                    painter = painterResource(R.drawable.ic_editor_scale),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(20.dp)
-                        .offset {
-                            IntOffset(scaleArrowPosition.value.x.toInt(), scaleArrowPosition.value.y.toInt())
-                        }
-                        .constrainAs(scaleIcon) {
-                            end.linkTo(box.end)
-                            bottom.linkTo(box.bottom)
-                        }
-                        .pointerInput(Unit) {
-                            detectDragGestures { change, _ ->
-                                val newScale = scale * (1 + change.positionChange().y / this.size.height)
-                                scale = newScale.coerceIn(0.1f, maxScale) // 限制scale的取值范围
-                                XLogger.d("scale: $scale")
-                            }
-                        }
-                )
-            }
-        }
-    }
 
     @Composable
     fun ScalableImage222() {

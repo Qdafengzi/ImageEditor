@@ -17,6 +17,9 @@ data class ImageData(
     val position:Offset,
     val rotate: Float = 0f,
     val scale:Float=1f,
+    val scaleIconOffset: Offset = Offset.Zero,
+    val deleteIconOffset: Offset = Offset.Zero,
+    val rotateIconOffset: Offset = Offset.Zero,
 )
 
 data class RootImage(
@@ -152,6 +155,21 @@ class EditorViewModel:ViewModel() {
             _currentImageList.update {
                 it.copy(imageList = list.toList())
             }
+        }
+    }
+    fun updateIconsOffset(
+        deleteIconOffset: Offset,
+        rotateIconOffset: Offset,
+        scaleIconOffset: Offset
+    ) {
+        val list = _currentImageList.value.imageList.toMutableList()
+        list[_currentImageList.value.currentIndex]  = list[_currentImageList.value.currentIndex].copy(
+            deleteIconOffset = deleteIconOffset,
+            rotateIconOffset = rotateIconOffset,
+            scaleIconOffset = scaleIconOffset
+        )
+        _currentImageList.update {
+            it.copy(imageList = list.toList())
         }
     }
 }
