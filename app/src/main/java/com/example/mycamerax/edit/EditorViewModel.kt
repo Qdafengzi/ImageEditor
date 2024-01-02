@@ -12,6 +12,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 
+enum class TouchType {
+    NONE,
+    MOVE,
+    SCALE,
+    ROTATE,
+    SCALE_ROTATE,
+}
+
 data class ImageData(
     val image:Bitmap,
     val position:Offset,
@@ -20,6 +28,7 @@ data class ImageData(
     val scaleIconOffset: Offset = Offset.Zero,
     val deleteIconOffset: Offset = Offset.Zero,
     val rotateIconOffset: Offset = Offset.Zero,
+    val eventType:TouchType= TouchType.NONE
 )
 
 data class RootImage(
@@ -181,6 +190,15 @@ class EditorViewModel:ViewModel() {
         _currentImageList.update {
             it.copy(imageList = list.toList())
         }
+    }
 
+    fun updateTouchType(type:TouchType){
+        val list = _currentImageList.value.imageList.toMutableList()
+        list[_currentImageList.value.currentIndex]  = list[_currentImageList.value.currentIndex].copy(
+            eventType = type
+        )
+        _currentImageList.update {
+            it.copy(imageList = list.toList())
+        }
     }
 }

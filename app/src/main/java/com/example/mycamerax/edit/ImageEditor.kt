@@ -121,13 +121,16 @@ fun ImageEditor( viewModel: EditorViewModel = viewModel()) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             Button(onClick = {
                 scope.launch {
-                    val random = (1..3).random()
+                    val random = 2
+//                    val random = (1..3).random()
                     val imageBitmap = if (random == 1)
                         BitmapFactory.decodeResource(context.resources, R.mipmap.icon11)
                     else if (random == 2)
                         BitmapFactory.decodeResource(context.resources, R.mipmap.icon222)
-                    else
+                    else if (random ==3)
                         BitmapFactory.decodeResource(context.resources, R.mipmap.icon33)
+                    else
+                        BitmapFactory.decodeResource(context.resources, R.mipmap.icon_44)
                     viewModel.addImage(imageBitmap)
                 }
             }) {

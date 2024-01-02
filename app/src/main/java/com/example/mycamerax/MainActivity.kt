@@ -96,7 +96,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.example.mycamerax.databinding.ActivityMainBinding
-import com.example.mycamerax.demo.RotationExample2
+import com.example.mycamerax.edit.ImageEditor
 import com.example.mycamerax.utils.ResUtils
 import com.google.android.material.slider.Slider.OnChangeListener
 import com.theeasiestway.yuv.YuvUtils
@@ -233,13 +233,13 @@ class MainActivity : AppCompatActivity() {
         //initView()
         setContent {
 //            ImageEditorWithRectangularText()
-//            ImageEditor()
+            ImageEditor()
 //            ScaleWithFixedButtonsExample()
 //            ViewStyle()
 //            ScalableImage5()
 //            ScalableImage3333()
 
-            RotationExample2()
+//            RotationExample2()
 //            RotationExample3()
         }
     }
