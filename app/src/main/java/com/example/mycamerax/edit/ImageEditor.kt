@@ -79,7 +79,7 @@ fun ImageEditor( viewModel: EditorViewModel = viewModel()) {
             when (editeType) {
                 EditeType.PIC -> {
                     imageList.forEachIndexed { index, imageData ->
-                        XLogger.d("重新遍历数据 绘制：$imageData")
+                        XLogger.d("imageList draw：$imageData")
                         key("${index}_${imageData.hashCode()}") {
                             AddImage(index, imageData, viewModel)
                         }

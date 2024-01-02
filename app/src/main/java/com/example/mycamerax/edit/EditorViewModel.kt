@@ -172,4 +172,15 @@ class EditorViewModel:ViewModel() {
             it.copy(imageList = list.toList())
         }
     }
+
+    fun updateRotate(angle: Float) {
+        val list = _currentImageList.value.imageList.toMutableList()
+        list[_currentImageList.value.currentIndex]  = list[_currentImageList.value.currentIndex].copy(
+            rotate = angle
+        )
+        _currentImageList.update {
+            it.copy(imageList = list.toList())
+        }
+
+    }
 }
