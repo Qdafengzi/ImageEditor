@@ -102,7 +102,7 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
 
     val currentImageData = viewModel.currentImageList.collectAsState().value
     val currentImage = currentImageData.imageList[index]
-    val eventType = currentImage.eventType
+//    val eventType = currentImage.eventType
 
 
     val currentHandleIndex = currentImageData.currentIndex
@@ -202,7 +202,7 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                         transformOrigin = TransformOrigin.Center
                     }
                     .onGloballyPositioned { layoutCoordinates ->
-                        if (eventType==TouchType.ROTATE) return@onGloballyPositioned
+//                        if (eventType==TouchType.ROTATE) return@onGloballyPositioned
 
                         XLogger.d("onGloballyPositioned-------------->")
                         val angleRadians = Math.toRadians(currentRotate.toDouble()).toFloat()
@@ -411,10 +411,10 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                             val sensitivity = 50f
                             detectDragGestures(
                                 onDragStart = {
-                                    viewModel.updateTouchType(type = TouchType.ROTATE)
+//                                    viewModel.updateTouchType(type = TouchType.ROTATE)
                                 },
                                 onDragCancel = {
-                                    viewModel.updateTouchType(type = TouchType.NONE)
+//                                    viewModel.updateTouchType(type = TouchType.NONE)
                                 },
                                 onDrag = { change, _ ->
                                     val dx = change.position.x - size.width / 2
@@ -427,7 +427,7 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                                 onDragEnd = {
                                     XLogger.d("rotate drag onDragEnd:$currentRotate")
                                     viewModel.updateRotate(currentRotate)
-                                    viewModel.updateTouchType(type = TouchType.NONE)
+//                                    viewModel.updateTouchType(type = TouchType.NONE)
                                 }
                             )
                         }
@@ -454,10 +454,10 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                         }
                         .pointerInput(imageData.image.hashCode()) {
                             detectDragGestures(onDragStart = {
-                                viewModel.updateTouchType(TouchType.SCALE)
+//                                viewModel.updateTouchType(TouchType.SCALE)
                                 XLogger.d("scale drag onDragStart")
                             }, onDragEnd = {
-                                viewModel.updateTouchType(TouchType.NONE)
+//                                viewModel.updateTouchType(TouchType.NONE)
                                 viewModel.updateScale(scale)
                                 viewModel.updateIconsOffset(
                                     deleteIconOffset,
@@ -466,7 +466,7 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                                 )
                                 XLogger.d("scale drag onDragEnd scale:${scale}")
                             }, onDragCancel = {
-                                viewModel.updateTouchType(TouchType.NONE)
+//                                viewModel.updateTouchType(TouchType.NONE)
                                 XLogger.d("scale drag onDragCancel")
                             }, onDrag = { change, _ ->
                                 val newScale = scale * (1 + change.positionChange().y / this.size.height)

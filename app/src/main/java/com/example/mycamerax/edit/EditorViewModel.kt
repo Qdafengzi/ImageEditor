@@ -2,6 +2,8 @@ package com.example.mycamerax.edit
 
 import android.graphics.Bitmap
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mycamerax.XLogger
@@ -20,15 +22,18 @@ enum class TouchType {
     SCALE_ROTATE,
 }
 
+
+
 data class ImageData(
     val image:Bitmap,
     val position:Offset,
+    val imageSize: Dp= 40.dp,
     val rotate: Float = 0f,
     val scale:Float=1f,
     val scaleIconOffset: Offset = Offset.Zero,
     val deleteIconOffset: Offset = Offset.Zero,
     val rotateIconOffset: Offset = Offset.Zero,
-    val eventType:TouchType= TouchType.NONE
+//    val eventType:TouchType= TouchType.NONE
 )
 
 data class RootImage(
@@ -192,13 +197,13 @@ class EditorViewModel:ViewModel() {
         }
     }
 
-    fun updateTouchType(type:TouchType){
-        val list = _currentImageList.value.imageList.toMutableList()
-        list[_currentImageList.value.currentIndex]  = list[_currentImageList.value.currentIndex].copy(
-            eventType = type
-        )
-        _currentImageList.update {
-            it.copy(imageList = list.toList())
-        }
-    }
+//    fun updateTouchType(type:TouchType){
+//        val list = _currentImageList.value.imageList.toMutableList()
+//        list[_currentImageList.value.currentIndex]  = list[_currentImageList.value.currentIndex].copy(
+//            eventType = type
+//        )
+//        _currentImageList.update {
+//            it.copy(imageList = list.toList())
+//        }
+//    }
 }

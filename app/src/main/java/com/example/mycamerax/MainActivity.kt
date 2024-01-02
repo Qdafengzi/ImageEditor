@@ -232,14 +232,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         //initView()
         setContent {
-//            ImageEditorWithRectangularText()
             ImageEditor()
-//            ScaleWithFixedButtonsExample()
-//            ViewStyle()
-//            ScalableImage5()
-//            ScalableImage3333()
 
-//            RotationExample2()
 //            RotationExample3()
         }
     }
