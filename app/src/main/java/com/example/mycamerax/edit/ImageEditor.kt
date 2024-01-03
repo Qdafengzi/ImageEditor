@@ -65,7 +65,8 @@ fun ImageEditor( viewModel: EditorViewModel = viewModel()) {
         ){
             //裁剪模式
             if (editeType == EditeType.CROP) {
-                AddCrop(viewModel = viewModel)
+                //AddCrop(viewModel = viewModel)
+                AddCropView()
             } else {
                 //其他模式
                 Box(

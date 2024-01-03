@@ -2,11 +2,8 @@ package com.example.mycamerax
 
 import android.app.Application
 import android.content.Context
-import android.util.Log
-import androidx.camera.camera2.Camera2Config
-import androidx.camera.core.CameraXConfig
 
-class App : Application(), CameraXConfig.Provider {
+class App : Application() {
 
     companion object{
         @JvmStatic
@@ -16,10 +13,5 @@ class App : Application(), CameraXConfig.Provider {
     override fun onCreate() {
         super.onCreate()
         CONTEXT = applicationContext
-    }
-
-    override fun getCameraXConfig(): CameraXConfig {
-        return CameraXConfig.Builder.fromConfig(Camera2Config.defaultConfig())
-            .setMinimumLoggingLevel(Log.INFO).build()
     }
 }

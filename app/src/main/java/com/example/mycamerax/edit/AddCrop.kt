@@ -20,7 +20,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalContext
@@ -31,7 +30,6 @@ import com.example.mycamerax.XLogger
 import kotlinx.coroutines.coroutineScope
 
 
-@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun AddCrop(viewModel: EditorViewModel) {
     val context = LocalContext.current
@@ -102,9 +100,9 @@ fun AddCrop(viewModel: EditorViewModel) {
 
 
             //drawImage()
-            drawImage(rootBitmap.asImageBitmap(),
-
-                )
+//            drawImage(rootBitmap.asImageBitmap(),
+//
+//                )
 
 
             if (touchFlag) {

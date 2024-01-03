@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("kotlin-kapt")
+    id("kotlin-parcelize")
 }
 
 android {
@@ -90,26 +91,17 @@ dependencies {
     // Optional - Integration with ViewModels
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1")
 
-    val cameraxVersion = "1.3.0"
-    implementation("androidx.camera:camera-core:$cameraxVersion")
-    implementation("androidx.camera:camera-camera2:$cameraxVersion")
-    implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
-    implementation("androidx.camera:camera-view:$cameraxVersion")
-    implementation("androidx.camera:camera-video:$cameraxVersion")
-    implementation("androidx.camera:camera-extensions:$cameraxVersion")
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
-
-    implementation (files("libs/yuv.aar"))
-    implementation ("jp.co.cyberagent.android:gpuimage:2.1.0")
-
     implementation ("com.github.bumptech.glide:glide:4.13.2")
     kapt ("com.github.bumptech.glide:compiler:4.13.2")
 
 
     implementation ("com.github.bumptech.glide:compose:1.0.0-beta01")
-
-
     implementation ("androidx.constraintlayout:constraintlayout-compose:1.0.1")
 
-//    implementation ("com.wefika:flowlayout:0.4.1")
+    implementation ("androidx.lifecycle:lifecycle-extensions:2.2.0")
+
+    implementation ("io.reactivex.rxjava2:rxjava:2.2.13")
+    implementation ("io.reactivex.rxjava2:rxandroid:2.1.1")
+
+
 }
