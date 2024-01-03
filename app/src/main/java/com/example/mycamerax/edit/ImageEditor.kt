@@ -22,6 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.boundsInParent
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -39,9 +42,9 @@ fun ImageEditor( viewModel: EditorViewModel = viewModel()) {
     LaunchedEffect(key1 = Unit) {
         XLogger.d("设置")
         val bitmap = BitmapFactory.decodeResource(context.resources, R.mipmap.ic_editor)
-        viewModel.updateBitmap(bitmap)
+        viewModel.editorInit(bitmap)
     }
-    val rootImageData = viewModel.rootImage.collectAsState().value
+    val rootImageData = viewModel.rootImageData.collectAsState().value
     val bitmap = rootImageData.rootBitmap?.asImageBitmap()
 
     if (bitmap == null) {
@@ -53,94 +56,135 @@ fun ImageEditor( viewModel: EditorViewModel = viewModel()) {
     val editeType = rootImageData.editType
     val imageList = viewModel.currentImageList.collectAsState().value.imageList
 
-
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize()
+    ) {
         Box(
             Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .background(color = Color.Magenta.copy(alpha = 0.5f))
-                .onSizeChanged {
-                    //中心点的位置
-                    viewModel.updateCenterOffset(Offset(it.width / 2f, it.height / 2f))
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                bitmap = bitmap,
-                contentDescription = "root image",
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .fillMaxSize(),
-//                contentScale = if (bitmap.width > bitmap.height) ContentScale.FillWidth else ContentScale.FillHeight
-            )
-            //剪切一个
-            //图片、文字 多个
-            when (editeType) {
-                EditeType.PIC -> {
-                    imageList.forEachIndexed { index, imageData ->
-                        XLogger.d("imageList draw：$imageData")
-                        key("${index}_${imageData.hashCode()}") {
-                            AddImage2(index, imageData, viewModel)
+        ){
+            //裁剪模式
+            if (editeType == EditeType.CROP) {
+                AddCrop(viewModel = viewModel)
+            } else {
+                //其他模式
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(color = Color.White.copy(alpha = 0.5f))
+                        .onSizeChanged {
+                            //中心点的位置
+                            viewModel.updateCenterOffset(Offset(it.width / 2f, it.height / 2f))
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        bitmap = bitmap,
+                        contentDescription = "root image",
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .fillMaxSize()
+                            .onSizeChanged {
+                            }
+                            .onGloballyPositioned {
+                                val localToWindow = it.localToWindow(Offset.Zero)
+                                //
+                                val boundsInParent = it.boundsInParent()
+                                XLogger.d(" localToWindow:${localToWindow} boundsInParent:${boundsInParent}")
+
+                            }
+                        ,
+                        contentScale = if (bitmap.width > bitmap.height) ContentScale.FillWidth else ContentScale.FillHeight
+                    )
+                    //剪切一个
+                    //图片、文字 多个
+                    when (editeType) {
+                        EditeType.PIC -> {
+                            imageList.forEachIndexed { index, imageData ->
+                                XLogger.d("imageList draw：$imageData")
+                                key("${index}_${imageData.hashCode()}") {
+                                    AddImage(index, imageData, viewModel)
+                                }
+                            }
                         }
+
+                        EditeType.TEXT -> {
+
+                        }
+
+                        EditeType.NONE -> {
+
+                        }
+                        else->{}
                     }
                 }
 
-                EditeType.TEXT -> {
-
-                }
-
-                EditeType.CUT -> {
-
-                }
-
-                EditeType.NONE -> {
-
-                }
             }
         }
 
+
+
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            Button(onClick = {
-
-            }) {
-                Text(text = "取消")
-            }
-            Button(onClick = {
-
-            }) {
-                Text(text = "撤销")
-            }
-            Button(onClick = {
-
-            }) {
-                Text(text = "保存")
-            }
+//            Button(onClick = {
+//
+//            }) {
+//                Text(text = "取消")
+//            }
+//            Button(onClick = {
+//
+//            }) {
+//                Text(text = "撤销")
+//            }
+//            Button(onClick = {
+//
+//            }) {
+//                Text(text = "保存")
+//            }
         }
 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             Button(onClick = {
                 scope.launch {
-                    val random = 2
-//                    val random = (1..3).random()
-                    val imageBitmap = if (random == 1)
-                        BitmapFactory.decodeResource(context.resources, R.mipmap.icon11)
-                    else if (random == 2)
-                        BitmapFactory.decodeResource(context.resources, R.mipmap.icon222)
-                    else if (random ==3)
-                        BitmapFactory.decodeResource(context.resources, R.mipmap.icon33)
-                    else
-                        BitmapFactory.decodeResource(context.resources, R.mipmap.icon_44)
+                    val imageBitmap = when ((1..3).random()) {
+                        1 -> BitmapFactory.decodeResource(context.resources, R.mipmap.icon11)
+                        2 -> BitmapFactory.decodeResource(context.resources, R.mipmap.icon222)
+                        3 -> BitmapFactory.decodeResource(context.resources, R.mipmap.icon33)
+                        else -> BitmapFactory.decodeResource(context.resources, R.mipmap.icon_44)
+                    }
                     viewModel.addImage(imageBitmap)
                 }
             }) {
                 Text(text = "addImage")
             }
-            Button(onClick = {
+//            Button(onClick = {
+//
+//            }) {
+//                Text(text = "addTxt")
+//            }
+        }
 
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Button(onClick = {
+                viewModel.addCrop()
             }) {
-                Text(text = "addText")
+                Text(text = "Cut")
             }
+            Button(onClick = {
+                viewModel.cancelCrop()
+            }) {
+                Text(text = "取消")
+            }
+
+//            Button(onClick = {
+//            }) {
+//                Text(text = "Rotate Left")
+//            }
+//
+//            Button(onClick = {
+//
+//            }) {
+//                Text(text = "Rotate Right")
+//            }
         }
     }
 }

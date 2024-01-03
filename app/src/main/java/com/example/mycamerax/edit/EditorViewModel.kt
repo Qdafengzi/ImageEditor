@@ -2,6 +2,8 @@ package com.example.mycamerax.edit
 
 import android.graphics.Bitmap
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -23,13 +25,12 @@ enum class TouchType {
 }
 
 
-
 data class ImageData(
-    val image:Bitmap,
-    val position:Offset,
-    val imageSize: Dp= 40.dp,
+    val image: Bitmap,
+    val position: Offset,
+    val imageSize: Dp = 40.dp,
     val rotate: Float = 0f,
-    val scale:Float=1f,
+    val scale: Float = 1f,
     val scaleIconOffset: Offset = Offset.Zero,
     val deleteIconOffset: Offset = Offset.Zero,
     val rotateIconOffset: Offset = Offset.Zero,
@@ -39,18 +40,20 @@ data class ImageData(
 data class RootImage(
     val rootBitmap: Bitmap? = null,
     val center: Offset = Offset.Zero,
-    val editType:EditeType= EditeType.NONE
+    val editType: EditeType = EditeType.NONE,
+    val originalSize: Size = Size.Zero,
+    val cropRect: Rect = Rect.Zero,
 )
 
 data class CurrentImageList(
-    val imageList :List<ImageData> = listOf(),
-    val currentIndex:Int = 0,//当前移动的图
+    val imageList: List<ImageData> = listOf(),
+    val currentIndex: Int = 0,//当前移动的图
 )
 
-class EditorViewModel:ViewModel() {
+class EditorViewModel : ViewModel() {
 
-    private val  _rootImage = MutableStateFlow(RootImage())
-    val rootImage = _rootImage.asStateFlow()
+    private val _rootImageData = MutableStateFlow(RootImage())
+    val rootImageData = _rootImageData.asStateFlow()
 
     val deque = ArrayList<Bitmap>()
 
@@ -60,15 +63,48 @@ class EditorViewModel:ViewModel() {
     val currentImageList = _currentImageList.asStateFlow()
 
 
-
-    fun updateBitmap(bitmap: Bitmap){
+    fun editorInit(bitmap: Bitmap) {
         viewModelScope.launch {
-            _rootImage.update {
+            val originalBitmapRect = if (bitmap.height >= bitmap.width) {
+                //以高度为准进行缩放
+                //屏幕高度
+                val screenWidth = ResUtils.screenWidth.toFloat()
+                val zoomRatio = screenWidth / bitmap.height.toFloat()
+                val widthOfZoom = bitmap.width * zoomRatio
+                val left = (screenWidth - widthOfZoom) * 0.5f
+                XLogger.d("zoomRatio----screenWidth:${ResUtils.screenWidth}")
+                XLogger.d("zoomRatio----width:${bitmap.width}  height:${bitmap.height}-- width:${widthOfZoom}---->zoomRatio:${zoomRatio} left:$left")
+                //1080 - 854.1818  /2
+                //zoomRatio----width:435  height:550-- width:854.1818---->zoomRatio:1.9636364 x:112.90909
+                Rect(left, 0f, left + widthOfZoom, screenWidth)
+
+            } else {
+                val screenWidth = ResUtils.screenWidth.toFloat()
+                val zoomRatio = screenWidth / bitmap.width.toFloat()
+                val heightOfZoom = bitmap.height * zoomRatio
+                val top = (screenWidth - heightOfZoom) * 0.5f
+                Rect(0f, top, screenWidth, top + heightOfZoom)
+            }
+
+            _rootImageData.update {
+                it.copy(
+                    rootBitmap = bitmap,
+                    originalSize = Size(bitmap.width.toFloat(), bitmap.height.toFloat()),
+                    cropRect = originalBitmapRect
+                )
+            }
+            deque.add(bitmap)
+        }
+    }
+
+    fun updateBitmap(bitmap: Bitmap) {
+        viewModelScope.launch {
+            _rootImageData.update {
                 it.copy(rootBitmap = bitmap)
             }
             deque.add(bitmap)
 
-            XLogger.d("图像：${_rootImage.value.rootBitmap?.height}")
+            XLogger.d("图像：${_rootImageData.value.rootBitmap?.height}")
         }
 
     }
@@ -76,23 +112,23 @@ class EditorViewModel:ViewModel() {
     /**
      * 中心点的位置
      */
-    fun updateCenterOffset(centerOffset: Offset){
+    fun updateCenterOffset(centerOffset: Offset) {
         viewModelScope.launch {
-            _rootImage.update {
+            _rootImageData.update {
                 it.copy(center = centerOffset)
             }
         }
     }
 
-    fun addImage(bitmap:Bitmap){
+    fun addImage(bitmap: Bitmap) {
         val list = _currentImageList.value.imageList.toMutableList()
 
         //val paddingValue = LocalDensity.current.run { 10.dp.toPx() }
         val padding = ResUtils.dp2px(10f)
         //新添加的图位置要放在中心位置
         val rootPosition = Offset(
-            _rootImage.value.center.x - bitmap.width / 2f-padding,
-            _rootImage.value.center.y - bitmap.height / 2f-padding
+            _rootImageData.value.center.x - bitmap.width / 2f - padding,
+            _rootImageData.value.center.y - bitmap.height / 2f - padding
         )
 
         list.add(ImageData(image = bitmap, position = rootPosition))
@@ -101,7 +137,7 @@ class EditorViewModel:ViewModel() {
             it.copy(imageList = list.toList(), currentIndex = list.size - 1)
         }
 
-        _rootImage.update {
+        _rootImageData.update {
             it.copy(editType = EditeType.PIC)
         }
 
@@ -110,11 +146,11 @@ class EditorViewModel:ViewModel() {
         }
     }
 
-    fun deleteImage(index:Int) {
-       XLogger.d("删除：${index}")
+    fun deleteImage(index: Int) {
+        XLogger.d("删除：${index}")
         val list = _currentImageList.value.imageList.toMutableList()
         list.removeAt(index)
-        val newSize = (list.size-1)
+        val newSize = (list.size - 1)
         _currentImageList.update {
             it.copy(imageList = list.toList(), currentIndex = if (newSize < 0) 0 else newSize)
         }
@@ -124,7 +160,7 @@ class EditorViewModel:ViewModel() {
      * 触摸等事件要前置
      * 把图片前置
      */
-    fun bringImageToFront(index:Int){
+    fun bringImageToFront(index: Int) {
         //XLogger.d("前置START最后一个是：${_currentImageList.value.imageList.last()}")
         //如果就一个不做处理
         if (_currentImageList.value.imageList.size <= 1) return
@@ -147,12 +183,13 @@ class EditorViewModel:ViewModel() {
     /**
      * 更新当前处理的图片
      */
-    private fun updateHandleImageIndex(index: Int){
+    private fun updateHandleImageIndex(index: Int) {
         XLogger.d("current index $index")
         _currentImageList.update {
             it.copy(currentIndex = index)
         }
     }
+
     fun updateImagePosition(index: Int, position: Offset) {
         val list = _currentImageList.value.imageList.toMutableList()
         val newData = list[index].copy(position = position)
@@ -162,26 +199,29 @@ class EditorViewModel:ViewModel() {
         }
     }
 
-    fun updateScale(scale:Float){
+    fun updateScale(scale: Float) {
         viewModelScope.launch {
             val list = _currentImageList.value.imageList.toMutableList()
-            list[_currentImageList.value.currentIndex]  = list[_currentImageList.value.currentIndex].copy(scale = scale)
+            list[_currentImageList.value.currentIndex] =
+                list[_currentImageList.value.currentIndex].copy(scale = scale)
             _currentImageList.update {
                 it.copy(imageList = list.toList())
             }
         }
     }
+
     fun updateIconsOffset(
         deleteIconOffset: Offset,
         rotateIconOffset: Offset,
         scaleIconOffset: Offset
     ) {
         val list = _currentImageList.value.imageList.toMutableList()
-        list[_currentImageList.value.currentIndex]  = list[_currentImageList.value.currentIndex].copy(
-            deleteIconOffset = deleteIconOffset,
-            rotateIconOffset = rotateIconOffset,
-            scaleIconOffset = scaleIconOffset
-        )
+        list[_currentImageList.value.currentIndex] =
+            list[_currentImageList.value.currentIndex].copy(
+                deleteIconOffset = deleteIconOffset,
+                rotateIconOffset = rotateIconOffset,
+                scaleIconOffset = scaleIconOffset
+            )
         _currentImageList.update {
             it.copy(imageList = list.toList())
         }
@@ -189,13 +229,15 @@ class EditorViewModel:ViewModel() {
 
     fun updateRotate(angle: Float) {
         val list = _currentImageList.value.imageList.toMutableList()
-        list[_currentImageList.value.currentIndex]  = list[_currentImageList.value.currentIndex].copy(
-            rotate = angle
-        )
+        list[_currentImageList.value.currentIndex] =
+            list[_currentImageList.value.currentIndex].copy(
+                rotate = angle
+            )
         _currentImageList.update {
             it.copy(imageList = list.toList())
         }
     }
+
 
 //    fun updateTouchType(type:TouchType){
 //        val list = _currentImageList.value.imageList.toMutableList()
@@ -206,4 +248,17 @@ class EditorViewModel:ViewModel() {
 //            it.copy(imageList = list.toList())
 //        }
 //    }
+
+
+    fun addCrop() {
+        _rootImageData.update {
+            it.copy(editType = EditeType.CROP)
+        }
+    }
+
+    fun cancelCrop() {
+        _rootImageData.update {
+            it.copy(editType = EditeType.NONE)
+        }
+    }
 }

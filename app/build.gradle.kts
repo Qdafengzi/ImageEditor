@@ -105,6 +105,10 @@ dependencies {
     implementation ("com.github.bumptech.glide:glide:4.13.2")
     kapt ("com.github.bumptech.glide:compiler:4.13.2")
 
+
+    implementation ("com.github.bumptech.glide:compose:1.0.0-beta01")
+
+
     implementation ("androidx.constraintlayout:constraintlayout-compose:1.0.1")
 
 //    implementation ("com.wefika:flowlayout:0.4.1")

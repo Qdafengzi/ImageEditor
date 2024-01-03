@@ -233,8 +233,11 @@ class MainActivity : AppCompatActivity() {
         //initView()
         setContent {
             ImageEditor()
+//            ImageWithCropOverlay()
 
 //            RotationExample3()
+
+//            TransparentRectangleOverlay()
         }
     }
 
