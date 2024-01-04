@@ -11,7 +11,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -25,10 +25,13 @@ import com.example.mycamerax.R
 import kotlin.math.PI
 import kotlin.math.atan2
 
+
 @Composable
 fun RotationExample3() {
-    var angle by remember { mutableStateOf(0f) }
+    var angle by remember { mutableFloatStateOf(0f) }
     val maxAngle = 360f
+    val iconDistance = 100f // Adjust the distance between the icon and the image as needed
+
 
     Box(
         contentAlignment = Alignment.Center,
@@ -54,6 +57,12 @@ fun RotationExample3() {
                 .align(Alignment.Center)
                 .padding(16.dp)
                 .size(48.dp)
+//                .graphicsLayer {
+//                    val radians = Math.toRadians(angle.toDouble())
+//                    translationX = (iconDistance * cos(radians)).toFloat()
+//                    translationY = (iconDistance * sin(radians)).toFloat()
+//                    rotationZ = angle
+//                }
                 .pointerInput(Unit) {
                     detectDragGestures { change, _ ->
                         val dx = change.position.x - size.width/2
@@ -61,6 +70,7 @@ fun RotationExample3() {
                         angle = (atan2(dy, dx) * 180 / PI).toFloat()
                         if (angle < 0) angle += maxAngle
                     }
+
                 }
         )
     }

@@ -34,7 +34,6 @@ data class ImageData(
     val scaleIconOffset: Offset = Offset.Zero,
     val deleteIconOffset: Offset = Offset.Zero,
     val rotateIconOffset: Offset = Offset.Zero,
-//    val eventType:TouchType= TouchType.NONE
 )
 
 data class RootImage(
@@ -55,7 +54,8 @@ class EditorViewModel : ViewModel() {
     private val _rootImageData = MutableStateFlow(RootImage())
     val rootImageData = _rootImageData.asStateFlow()
 
-    val deque = ArrayList<Bitmap>()
+    //撤销的核心点
+    private val bitmapQueue = ArrayList<Bitmap>()
 
 
     //当前添加的图
@@ -93,7 +93,7 @@ class EditorViewModel : ViewModel() {
                     cropRect = originalBitmapRect
                 )
             }
-            deque.add(bitmap)
+            bitmapQueue.add(bitmap)
         }
     }
 
@@ -102,7 +102,7 @@ class EditorViewModel : ViewModel() {
             _rootImageData.update {
                 it.copy(rootBitmap = bitmap)
             }
-            deque.add(bitmap)
+            bitmapQueue.add(bitmap)
 
             XLogger.d("图像：${_rootImageData.value.rootBitmap?.height}")
         }

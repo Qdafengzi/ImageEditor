@@ -23,8 +23,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.boundsInParent
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -35,10 +33,9 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun ImageEditor( viewModel: EditorViewModel = viewModel()) {
+    XLogger.d("ImageEditor")
     val context = LocalContext.current
-
     val scope = rememberCoroutineScope()
-
     LaunchedEffect(key1 = Unit) {
         XLogger.d("设置")
         val bitmap = BitmapFactory.decodeResource(context.resources, R.mipmap.ic_editor)
@@ -52,17 +49,11 @@ fun ImageEditor( viewModel: EditorViewModel = viewModel()) {
         return
     }
 
-
     val editeType = rootImageData.editType
     val imageList = viewModel.currentImageList.collectAsState().value.imageList
 
-    Column(modifier = Modifier.fillMaxSize()
-    ) {
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f)
-        ){
+    Column(modifier = Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxWidth().aspectRatio(1f)){
             //裁剪模式
             if (editeType == EditeType.CROP) {
                 //AddCrop(viewModel = viewModel)
@@ -85,15 +76,6 @@ fun ImageEditor( viewModel: EditorViewModel = viewModel()) {
                         modifier = Modifier
                             .align(Alignment.Center)
                             .fillMaxSize()
-                            .onSizeChanged {
-                            }
-                            .onGloballyPositioned {
-                                val localToWindow = it.localToWindow(Offset.Zero)
-                                //
-                                val boundsInParent = it.boundsInParent()
-                                XLogger.d(" localToWindow:${localToWindow} boundsInParent:${boundsInParent}")
-
-                            }
                         ,
                         contentScale = if (bitmap.width > bitmap.height) ContentScale.FillWidth else ContentScale.FillHeight
                     )
