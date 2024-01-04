@@ -57,7 +57,7 @@ fun ImageEditor( viewModel: EditorViewModel = viewModel()) {
             //裁剪模式
             if (editeType == EditeType.CROP) {
                 //AddCrop(viewModel = viewModel)
-                AddCropView()
+                AddCropView(viewModel = viewModel)
             } else {
                 //其他模式
                 Box(
@@ -158,16 +158,17 @@ fun ImageEditor( viewModel: EditorViewModel = viewModel()) {
                 Text(text = "取消")
             }
 
-//            Button(onClick = {
-//            }) {
-//                Text(text = "Rotate Left")
-//            }
-//
-//            Button(onClick = {
-//
-//            }) {
-//                Text(text = "Rotate Right")
-//            }
+            Button(onClick = {
+                viewModel.turnLeftOrRight(left = true, right = false)
+            }) {
+                Text(text = "Rotate Left")
+            }
+
+            Button(onClick = {
+                viewModel.turnLeftOrRight(left = false, right = true)
+            }) {
+                Text(text = "Rotate Right")
+            }
         }
     }
 }

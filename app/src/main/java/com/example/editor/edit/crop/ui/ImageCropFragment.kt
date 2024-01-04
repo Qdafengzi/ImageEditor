@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.editor.R
+import com.example.editor.XLogger
 import com.example.editor.databinding.FragmentImageCropBinding
 import com.example.editor.edit.crop.main.CropRequest
 import com.example.editor.edit.crop.main.CropTheme
@@ -48,6 +49,7 @@ class ImageCropFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        XLogger.d("onCreateView")
         binding = FragmentImageCropBinding.inflate(inflater, container, false)
         viewModel.getCropRequest()?.let {
             binding.cropView.setTheme(CropTheme(R.color.white))
@@ -155,6 +157,66 @@ class ImageCropFragment : Fragment() {
         return binding.root
     }
 
+    fun turnLeft(){
+        if (!this::binding.isInitialized) return
+        //TODO:注意合成的时候的影响
+        val currentRotation = binding.cropView.rotation
+        val targetRotation = currentRotation - 90f
+        val animator = ObjectAnimator.ofFloat(binding.cropView, "rotation", currentRotation, targetRotation)
+        animator.duration = 100 // 动画持续时间，单位为毫秒
+        animator.addListener(object :Animator.AnimatorListener{
+            override fun onAnimationStart(animation: Animator) {
+                binding.btnLeft.isClickable = false
+                binding.btnRight.isClickable = false
+            }
+
+            override fun onAnimationEnd(animation: Animator) {
+                binding.btnLeft.isClickable = true
+                binding.btnRight.isClickable = true
+            }
+
+            override fun onAnimationCancel(animation: Animator) {
+                binding.btnLeft.isClickable = true
+                binding.btnRight.isClickable = true
+            }
+
+            override fun onAnimationRepeat(animation: Animator) {
+            }
+
+        })
+        animator.start()
+    }
+
+    fun turnRight(){
+        if (!this::binding.isInitialized) return
+        //TODO：注意合成的时候的影响
+        val currentRotation = binding.cropView.rotation
+        val targetRotation = currentRotation + 90f
+        val animator = ObjectAnimator.ofFloat(binding.cropView, "rotation", currentRotation, targetRotation)
+        animator.duration = 100 // 动画持续时间，单位为毫秒
+        animator.addListener(object :Animator.AnimatorListener{
+            override fun onAnimationStart(animation: Animator) {
+                binding.btnRight.isClickable = false
+                binding.btnLeft.isClickable = false
+            }
+
+            override fun onAnimationEnd(animation: Animator) {
+                binding.btnRight.isClickable = true
+                binding.btnLeft.isClickable = true
+            }
+
+            override fun onAnimationCancel(animation: Animator) {
+                binding.btnRight.isClickable = true
+                binding.btnLeft.isClickable = true
+            }
+
+            override fun onAnimationRepeat(animation: Animator) {
+            }
+
+        })
+        animator.start()
+    }
+
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
@@ -176,6 +238,16 @@ class ImageCropFragment : Fragment() {
     private fun renderViewState(cropFragmentViewState: CropFragmentViewState) {
         binding.viewState = cropFragmentViewState
         binding.executePendingBindings()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        XLogger.d("-----------onDestroy")
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        XLogger.d("-----------onDestroyView")
     }
 
     companion object {

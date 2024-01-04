@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.editor.edit.data.CurrentImageList
 import com.example.editor.edit.data.ImageData
 import com.example.editor.edit.data.RootImage
+import com.example.editor.edit.data.TurnLeftRight
 import com.example.editor.utils.ResUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,6 +29,9 @@ class EditorViewModel : ViewModel() {
     //当前添加的图
     private val _currentImageList = MutableStateFlow(CurrentImageList())
     val currentImageList = _currentImageList.asStateFlow()
+
+    private val _turnClickData = MutableStateFlow(TurnLeftRight())
+    val turnClickData = _turnClickData.asStateFlow()
 
 
     fun editorInit(bitmap: Bitmap) {
@@ -228,4 +232,11 @@ class EditorViewModel : ViewModel() {
             it.copy(editType = EditeType.NONE)
         }
     }
+
+    fun turnLeftOrRight(left:Boolean, right: Boolean) {
+        _turnClickData.update {
+            it.copy(turnLeft = left, turnRight = right)
+        }
+    }
+
 }
