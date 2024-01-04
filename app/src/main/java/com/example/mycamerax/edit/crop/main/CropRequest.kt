@@ -2,7 +2,7 @@ package com.example.mycamerax.edit.crop.main
 
 import android.net.Uri
 import android.os.Parcelable
-import com.lyrebirdstudio.croppy.aspectratio.model.AspectRatio
+import com.example.mycamerax.edit.aspectratio.model.AspectRatio
 import kotlinx.parcelize.Parcelize
 
 @Parcelize

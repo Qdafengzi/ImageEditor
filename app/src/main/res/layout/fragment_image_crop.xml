@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:app="http://schemas.android.com/apk/res-auto">
+<layout xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
         <variable
             name="viewState"
             type="com.example.mycamerax.edit.crop.state.CropFragmentViewState" />
     </data>
 
 
-    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -58,7 +59,7 @@
                             android:id="@+id/buttonSizeWidth"
                             android:layout_width="@dimen/width_button_bitmap_dimension"
                             android:layout_height="@dimen/height_button_bitmap_dimension"
-                            android:layout_marginRight="@dimen/margin_4dp"
+                            android:layout_marginEnd="@dimen/margin_4dp"
                             android:background="@drawable/background_rounded_text"
                             android:gravity="center"
                             android:maxLength="6"
@@ -71,7 +72,7 @@
                             android:id="@+id/buttonSizeHeight"
                             android:layout_width="@dimen/width_button_bitmap_dimension"
                             android:layout_height="@dimen/height_button_bitmap_dimension"
-                            android:layout_marginLeft="@dimen/margin_4dp"
+                            android:layout_marginStart="@dimen/margin_4dp"
                             android:background="@drawable/background_rounded_text"
                             android:gravity="center"
                             android:maxLength="6"
@@ -99,14 +100,33 @@
 
         </com.google.android.material.appbar.AppBarLayout>
 
+
         <com.example.mycamerax.edit.crop.cropview.CropView
             android:id="@+id/cropView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:visibility="visible"
             app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/appBarLayout" />
+
+        <Button
+            android:id="@+id/btnLeft"
+            android:layout_width="wrap_content"
+            android:text="turn left"
+            android:visibility="visible"
+            app:layout_constraintStart_toStartOf="@id/cropView"
+            app:layout_constraintBottom_toBottomOf="@id/cropView"
+            android:layout_height="wrap_content"/>
+        <Button
+            android:visibility="visible"
+            android:id="@+id/btnRight"
+            android:layout_width="wrap_content"
+            android:text="turn right"
+            app:layout_constraintEnd_toEndOf="@id/cropView"
+            app:layout_constraintBottom_toBottomOf="@id/cropView"
+            android:layout_height="wrap_content"/>
 
         <com.example.mycamerax.edit.aspectratio.AspectRatioRecyclerView
             android:id="@+id/recyclerViewAspectRatios"

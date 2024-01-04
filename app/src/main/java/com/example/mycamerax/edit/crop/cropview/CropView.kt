@@ -1,5 +1,6 @@
 package com.example.mycamerax.edit.crop.cropview
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -17,6 +18,8 @@ import android.view.MotionEvent.ACTION_UP
 import android.view.View
 import androidx.core.content.ContextCompat
 import com.example.mycamerax.R
+import com.example.mycamerax.edit.aspectratio.model.AspectRatio
+import com.example.mycamerax.edit.aspectratio.model.AspectRatio.ASPECT_FREE
 import com.example.mycamerax.edit.crop.cropview.AspectMode.ASPECT
 import com.example.mycamerax.edit.crop.cropview.AspectMode.FREE
 import com.example.mycamerax.edit.crop.main.CropTheme
@@ -28,6 +31,7 @@ import com.example.mycamerax.edit.crop.util.extensions.clone
 import com.example.mycamerax.edit.crop.util.extensions.getCornerTouch
 import com.example.mycamerax.edit.crop.util.extensions.getEdgeTouch
 import com.example.mycamerax.edit.crop.util.extensions.getHypotenus
+import com.example.mycamerax.edit.crop.util.extensions.rotateBitmap
 import com.example.mycamerax.edit.crop.util.model.AnimatedRectF
 import com.example.mycamerax.edit.crop.util.model.Corner
 import com.example.mycamerax.edit.crop.util.model.Corner.BOTTOM_LEFT
@@ -43,8 +47,6 @@ import com.example.mycamerax.edit.crop.util.model.Edge.BOTTOM
 import com.example.mycamerax.edit.crop.util.model.Edge.LEFT
 import com.example.mycamerax.edit.crop.util.model.Edge.RIGHT
 import com.example.mycamerax.edit.crop.util.model.Edge.TOP
-import com.lyrebirdstudio.croppy.aspectratio.model.AspectRatio
-import com.lyrebirdstudio.croppy.aspectratio.model.AspectRatio.ASPECT_FREE
 import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
@@ -337,6 +339,7 @@ class CropView @JvmOverloads constructor(
     /**
      * Handles touches
      */
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         if (event == null) {
             return false
@@ -413,17 +416,19 @@ class CropView @JvmOverloads constructor(
         bitmap?.let { bitmap ->
             canvas.drawBitmap(bitmap, bitmapMatrix, emptyPaint)
         }
-
         canvas.save()
+
+        //会出裁剪的部分 和遮罩
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             canvas.clipOutRect(cropRect)
         } else {
             // 对于低于 Android P 的版本，使用已废弃的方法
             canvas.clipRect(cropRect, Region.Op.DIFFERENCE)
         }
-
         canvas.drawColor(maskBackgroundColor)
         canvas.restore()
+
+
         drawGrid(canvas)
         drawCornerToggles(canvas)
     }
@@ -1535,6 +1540,106 @@ class CropView @JvmOverloads constructor(
 
     private fun notifyCropRectChanged() {
         observeCropRectOnOriginalBitmapChanged?.invoke(getCropSizeOriginal())
+    }
+
+
+    fun turnLeft() {
+//        setAspectRatio(-90f)
+
+        //bitmapMatrix
+        val rotateCrop = rotateRectF(cropRect,-90f)
+        cropRect.left = rotateCrop.left
+        cropRect.right = rotateCrop.right
+        cropRect.top = rotateCrop.top
+        cropRect.bottom = rotateCrop.bottom
+
+
+        val rotateTarget = rotateRectF(targetRect,-90f)
+        targetRect.left = rotateTarget.left
+        targetRect.right = rotateTarget.right
+        targetRect.top = rotateTarget.top
+        targetRect.bottom = rotateTarget.bottom
+
+
+        val newBit = rotateRectF(bitmapRect,-90f)
+        bitmapRect.left = newBit.left
+        bitmapRect.right = newBit.right
+        bitmapRect.top = newBit.top
+        bitmapRect.bottom = newBit.bottom
+
+
+        val newViewRect = rotateRectF(viewRect,-90f)
+        viewRect.left = newViewRect.left
+        viewRect.right = newViewRect.right
+        viewRect.top = newViewRect.top
+        viewRect.bottom = newViewRect.bottom
+
+        //bitmapMatrix.postRotate(-90f)
+
+        bitmap?.rotateBitmap(-90)
+
+
+
+        invalidate()
+        calculateCenterTarget()
+        animateBitmapToCenterTarget()
+        animateCropRectToCenterTarget()
+    }
+
+    fun turnRight(){
+
+    }
+
+    fun rotateRectF(rectF: AnimatedRectF, degrees: Float): AnimatedRectF {
+        // 创建一个Matrix对象
+        val matrix = Matrix()
+
+        // 计算RectF的中心点
+        val centerX = rectF.centerX()
+        val centerY = rectF.centerY()
+
+        // 将Matrix移动到中心点
+        matrix.setTranslate(-centerX, -centerY)
+
+        // 旋转Matrix
+        matrix.postRotate(degrees)
+
+        // 将Matrix移动回原来的位置
+        matrix.postTranslate(centerX, centerY)
+
+        // 创建一个新的RectF来存储旋转后的结果
+        val rotatedRectF = AnimatedRectF()
+
+        // 使用Matrix来旋转原始的RectF，并将结果存储在新的RectF中
+        matrix.mapRect(rotatedRectF, rectF)
+
+        return rotatedRectF
+    }
+
+    fun rotateRectF(rectF: RectF, degrees: Float): RectF {
+        // 创建一个Matrix对象
+        val matrix = Matrix()
+
+        // 计算RectF的中心点
+        val centerX = rectF.centerX()
+        val centerY = rectF.centerY()
+
+        // 将Matrix移动到中心点
+        matrix.setTranslate(-centerX, -centerY)
+
+        // 旋转Matrix
+        matrix.postRotate(degrees)
+
+        // 将Matrix移动回原来的位置
+        matrix.postTranslate(centerX, centerY)
+
+        // 创建一个新的RectF来存储旋转后的结果
+        val rotatedRectF = RectF()
+
+        // 使用Matrix来旋转原始的RectF，并将结果存储在新的RectF中
+        matrix.mapRect(rotatedRectF, rectF)
+
+        return rotatedRectF
     }
 
     companion object {

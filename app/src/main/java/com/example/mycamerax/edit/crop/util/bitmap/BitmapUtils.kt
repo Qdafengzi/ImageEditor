@@ -7,8 +7,6 @@ import android.media.ExifInterface
 import android.net.Uri
 import com.example.mycamerax.edit.crop.ui.CroppedBitmapData
 import com.example.mycamerax.edit.crop.util.extensions.rotateBitmap
-import io.reactivex.Completable
-import io.reactivex.Single
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -19,51 +17,41 @@ object BitmapUtils {
     private const val MAX_SIZE = 1024
 
 
-    fun saveBitmap(croppedBitmapData: CroppedBitmapData, file: File): Completable {
-        return Completable.create {
-            try {
-                FileOutputStream(file).use { out ->
-                    croppedBitmapData.croppedBitmap?.compress(Bitmap.CompressFormat.PNG, 100, out)
-                    it.onComplete()
-                }
-            } catch (e: Exception) {
-                it.onError(e)
-            }
-
+    fun saveBitmap(croppedBitmapData: CroppedBitmapData, file: File) {
+        FileOutputStream(file).use { out ->
+            croppedBitmapData.croppedBitmap?.compress(Bitmap.CompressFormat.PNG, 100, out)
         }
     }
 
-    fun resize(uri: Uri, context: Context): Single<ResizedBitmap> {
-        return Single.create {
-            val options = BitmapFactory.Options()
-            options.inJustDecodeBounds = true
-            BitmapFactory.decodeStream(context.contentResolver.openInputStream(uri), null, options)
+    fun resize(uri: Uri, context: Context): ResizedBitmap {
+        val options = BitmapFactory.Options()
+        options.inJustDecodeBounds = true
+        BitmapFactory.decodeStream(context.contentResolver.openInputStream(uri), null, options)
 
-            var widthTemp = options.outWidth
-            var heightTemp = options.outHeight
-            var scale = 1
+        var widthTemp = options.outWidth
+        var heightTemp = options.outHeight
+        var scale = 1
 
-            while (true) {
-                if (widthTemp / 2 < MAX_SIZE || heightTemp / 2 < MAX_SIZE)
-                    break
-                widthTemp /= 2
-                heightTemp /= 2
-                scale *= 2
-            }
-
-            val resultOptions = BitmapFactory.Options().apply {
-                inSampleSize = scale
-            }
-            var resizedBitmap = BitmapFactory.decodeStream(
-                context.contentResolver.openInputStream(uri),
-                null,
-                resultOptions
-            )
-
-            resizedBitmap = resizedBitmap?.rotateBitmap(getOrientation(context.contentResolver.openInputStream(uri)))
-
-            it.onSuccess(ResizedBitmap(resizedBitmap))
+        while (true) {
+            if (widthTemp / 2 < MAX_SIZE || heightTemp / 2 < MAX_SIZE)
+                break
+            widthTemp /= 2
+            heightTemp /= 2
+            scale *= 2
         }
+
+        val resultOptions = BitmapFactory.Options().apply {
+            inSampleSize = scale
+        }
+        var resizedBitmap = BitmapFactory.decodeStream(
+            context.contentResolver.openInputStream(uri),
+            null,
+            resultOptions
+        )
+
+        resizedBitmap = resizedBitmap?.rotateBitmap(getOrientation(context.contentResolver.openInputStream(uri)))
+
+        return ResizedBitmap(resizedBitmap)
     }
 
     private fun getOrientation(inputStream: InputStream?): Int {

@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -47,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import com.example.mycamerax.R
 import com.example.mycamerax.XLogger
+import com.example.mycamerax.edit.data.ImageData
 import kotlinx.coroutines.coroutineScope
 import kotlin.math.PI
 import kotlin.math.abs
@@ -66,7 +66,7 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
     var currentImagePosition by remember { mutableStateOf(currentImage.position) }
 
     // 当前的旋转角度
-    var currentRotate by remember { mutableFloatStateOf(currentImage.rotate) }
+    var currentRotate by remember { mutableStateOf(currentImage.rotate) }
 
     //三个按钮的偏移位置
     var scaleIconOffset by remember { mutableStateOf(currentImage.scaleIconOffset) }
@@ -74,7 +74,7 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
     var rotateIconOffset by remember { mutableStateOf(currentImage.rotateIconOffset) }
 
     // 当前的缩放
-    var scale by remember { mutableFloatStateOf(currentImage.scale) }
+    var scale by remember { mutableStateOf(currentImage.scale) }
     //var imageSize by remember { mutableStateOf(currentImage.imageSize) }
 
     Box(
@@ -111,18 +111,21 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                         //因为是按照中心点进行缩放 所以其缩放距离是一般的缩放比
                         val scaleValue = abs(1 - scale) / 2f
 
+                        val widthScale = size.width * scaleValue
+                        val heightScale = size.height * scaleValue
+
                         // 计算缩放按钮的位置
-                        val scaleButtonX = size.width * scaleValue * if (scale < 1) -1 else 1
-                        val scaleButtonY = size.height * scaleValue * if (scale < 1) -1 else 1
+                        val scaleButtonX = widthScale * if (scale < 1) -1 else 1
+                        val scaleButtonY = heightScale * if (scale < 1) -1 else 1
                         scaleIconOffset = Offset(scaleButtonX, scaleButtonY)
 
                         // 计算删除按钮的位置
-                        val deleteButtonX = size.width * scaleValue * if (scale < 1) 1 else -1
-                        val deleteButtonY = size.height * scaleValue * if (scale < 1) 1 else -1
+                        val deleteButtonX = widthScale * if (scale < 1) 1 else -1
+                        val deleteButtonY = heightScale * if (scale < 1) 1 else -1
                         deleteIconOffset = Offset(deleteButtonX, deleteButtonY)
 
-                        val rotateButtonX = (size.width) * scaleValue * if (scale < 1) 1 else -1
-                        val rotateButtonY = (size.height) * scaleValue * if (scale < 1) -1 else 1
+                        val rotateButtonX = widthScale * if (scale < 1) 1 else -1
+                        val rotateButtonY = heightScale * if (scale < 1) -1 else 1
                         rotateIconOffset = Offset(rotateButtonX, rotateButtonY)
                     }
                     //两个手指 处理缩放 和 旋转逻辑
@@ -150,10 +153,8 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                                                 val sinAngle = sin(angleInRadians).toFloat()
 
                                                 // 根据旋转角度调整水平和垂直移动量
-                                                val rotatedX =
-                                                    it.positionChange().x * cosAngle - it.positionChange().y * sinAngle
-                                                val rotatedY =
-                                                    it.positionChange().x * sinAngle + it.positionChange().y * cosAngle
+                                                val rotatedX = it.positionChange().x * cosAngle - it.positionChange().y * sinAngle
+                                                val rotatedY = it.positionChange().x * sinAngle + it.positionChange().y * cosAngle
 
                                                 // 更新位置
                                                 currentImagePosition = Offset(currentImagePosition.x + rotatedX * scale, currentImagePosition.y + rotatedY * scale)

@@ -3,7 +3,7 @@ package com.lyrebirdstudio.croppy.aspectratio.model
 import androidx.annotation.DimenRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import com.lyrebirdstudio.croppy.aspectratio.model.AspectRatio
+import com.example.mycamerax.edit.aspectratio.model.AspectRatio
 
 data class AspectRatioItem(
     @DimenRes val aspectRatioSelectedWidthRes: Int,

@@ -14,7 +14,7 @@
     <color name="color_aspect_social_active">#ffffff</color>
 
 
-    <color name="colorCropToolbar">#1C1C1E</color>
+    <color name="colorCropToolbar">#4D000000</color>
 
     <color name="colorCropAlpha">#4D000000</color>
     <color name="colorCropBackground">#4D000000</color>
@@ -22,7 +22,6 @@
     <color name="colorSizeButtonUnselected">#303033</color>
     <color name="colorSizeButtonSelected">#329AFF</color>
 
-    <color name="colorDisableLayout">#CD1C1C1E</color>,
 
     <color name="white">#ffffff</color>
     <color name="blue">#329AFF</color>

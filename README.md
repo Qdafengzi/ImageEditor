@@ -1,23 +1,5 @@
-
-裁剪
-Box{
-   canvas() fillMaxSize
-
-   Image() 指定的位置
-   
-
-   
-   
+1.合成
+2.撤销
+3.添加文字
 
 
-}
-
-Box(){
-   canvas()
-
-
-   //大小和位置 动态改变
-   Constarinlayout(){
-      Image() 四个角 和四个中线
-   }
-}

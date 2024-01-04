@@ -11,7 +11,7 @@ import com.example.mycamerax.R
 import com.example.mycamerax.edit.crop.inputview.SizeInputData
 import com.example.mycamerax.edit.crop.inputview.SizeInputViewType
 import com.example.mycamerax.edit.crop.main.CropTheme
-import com.lyrebirdstudio.croppy.aspectratio.model.AspectRatio
+import com.example.mycamerax.edit.aspectratio.model.AspectRatio
 import kotlin.math.roundToInt
 
 data class CropFragmentViewState(

@@ -1,5 +1,7 @@
 package com.example.mycamerax.edit.crop.ui
 
+import android.animation.Animator
+import android.animation.ObjectAnimator
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -62,13 +64,69 @@ class ImageCropFragment : Fragment() {
             //取消
             onCancelClicked?.invoke()
         }
+        binding.btnLeft.setOnClickListener {
+
+//            binding.cropView.turnLeft()
+
+            //TODO:注意合成的时候的影响
+            val currentRotation = binding.cropView.rotation
+            val targetRotation = currentRotation - 90f
+            val animator = ObjectAnimator.ofFloat(binding.cropView, "rotation", currentRotation, targetRotation)
+            animator.duration = 100 // 动画持续时间，单位为毫秒
+            animator.addListener(object :Animator.AnimatorListener{
+                override fun onAnimationStart(animation: Animator) {
+                    binding.btnLeft.isClickable = false
+                }
+
+                override fun onAnimationEnd(animation: Animator) {
+                    binding.btnLeft.isClickable = true
+                }
+
+                override fun onAnimationCancel(animation: Animator) {
+                    binding.btnLeft.isClickable = true
+                }
+
+                override fun onAnimationRepeat(animation: Animator) {
+                }
+
+            })
+            animator.start()
+//            binding.cropView.rotation -=90f
+        }
+
+
+        binding.btnRight.setOnClickListener {
+            //TODO：注意合成的时候的影响
+            val currentRotation = binding.cropView.rotation
+            val targetRotation = currentRotation + 90f
+            val animator = ObjectAnimator.ofFloat(binding.cropView, "rotation", currentRotation, targetRotation)
+            animator.duration = 100 // 动画持续时间，单位为毫秒
+            animator.addListener(object :Animator.AnimatorListener{
+                override fun onAnimationStart(animation: Animator) {
+                    binding.btnRight.isClickable = false
+                }
+
+                override fun onAnimationEnd(animation: Animator) {
+                    binding.btnRight.isClickable = true
+                }
+
+                override fun onAnimationCancel(animation: Animator) {
+                    binding.btnRight.isClickable = true
+                }
+
+                override fun onAnimationRepeat(animation: Animator) {
+                }
+
+            })
+            animator.start()
+           // binding.cropView.rotation +=90f
+        }
 
         binding.imageViewApply.setOnClickListener {
             viewModel.getCropRequest()?.let { cropRequest->
                 when (cropRequest) {
                     is CropRequest.Manual -> {
-                        BitmapUtils
-                            .saveBitmap(binding.cropView.getCroppedData(), cropRequest.destinationUri.toFile())
+                        BitmapUtils.saveBitmap(binding.cropView.getCroppedData(), cropRequest.destinationUri.toFile())
                     }
                     is CropRequest.Auto -> {
                         val destinationUri = FileCreator.createFile(
@@ -79,8 +137,7 @@ class ImageCropFragment : Fragment() {
                             ),
                             requireContext()
                         ).toUri()
-                        BitmapUtils
-                            .saveBitmap(binding.cropView.getCroppedData(), destinationUri.toFile())
+                        BitmapUtils.saveBitmap(binding.cropView.getCroppedData(), destinationUri.toFile())
                     }
                 }
             }

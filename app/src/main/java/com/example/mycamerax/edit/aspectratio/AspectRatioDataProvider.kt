@@ -1,7 +1,7 @@
 package com.example.mycamerax.edit.aspectratio
 
 import com.example.mycamerax.R
-import com.lyrebirdstudio.croppy.aspectratio.model.AspectRatio
+import com.example.mycamerax.edit.aspectratio.model.AspectRatio
 import com.lyrebirdstudio.croppy.aspectratio.model.AspectRatioItem
 
 object AspectRatioDataProvider {

@@ -30,7 +30,6 @@ fun AddCropView() {
     }, update = {
         val bind = DataBindingUtil.bind<ImageCropBinding>(it)
 
-
         val context = it.context
 
         val uri = Uri.Builder()

@@ -5,19 +5,16 @@ import android.graphics.RectF
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
+import com.example.mycamerax.edit.aspectratio.model.AspectRatio
 import com.example.mycamerax.edit.crop.main.CropRequest
 import com.example.mycamerax.edit.crop.state.CropFragmentViewState
 import com.example.mycamerax.edit.crop.util.bitmap.BitmapUtils
 import com.example.mycamerax.edit.crop.util.bitmap.ResizedBitmap
-import com.lyrebirdstudio.croppy.aspectratio.model.AspectRatio
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.functions.Consumer
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class ImageCropViewModel(val app: Application) : AndroidViewModel(app) {
-
-    private val compositeDisposable = CompositeDisposable()
 
     private var cropRequest: CropRequest? = null
 
@@ -30,16 +27,12 @@ class ImageCropViewModel(val app: Application) : AndroidViewModel(app) {
 
     fun setCropRequest(cropRequest: CropRequest) {
         this.cropRequest = cropRequest
-
-        BitmapUtils
-            .resize(cropRequest.sourceUri, app.applicationContext)
-            .subscribeOn(Schedulers.computation())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(Consumer { resizedBitmapLiveData.value = it })
-            .also { compositeDisposable.add(it) }
-
-
-        cropViewStateLiveData.value = cropViewStateLiveData.value
+        viewModelScope.launch(Dispatchers.IO) {
+            val resizedBitmap = BitmapUtils.resize(cropRequest.sourceUri, app.applicationContext)
+            this.launch(Dispatchers.Main) {
+                resizedBitmapLiveData.value = resizedBitmap
+            }
+        }
     }
 
     fun getCropRequest(): CropRequest? = cropRequest
@@ -60,8 +53,5 @@ class ImageCropViewModel(val app: Application) : AndroidViewModel(app) {
 
     override fun onCleared() {
         super.onCleared()
-        if (compositeDisposable.isDisposed.not()) {
-            compositeDisposable.dispose()
-        }
     }
 }

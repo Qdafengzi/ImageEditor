@@ -4,50 +4,18 @@ import android.graphics.Bitmap
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mycamerax.XLogger
+import com.example.mycamerax.edit.data.CurrentImageList
+import com.example.mycamerax.edit.data.ImageData
+import com.example.mycamerax.edit.data.RootImage
 import com.example.mycamerax.utils.ResUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-
-enum class TouchType {
-    NONE,
-    MOVE,
-    SCALE,
-    ROTATE,
-    SCALE_ROTATE,
-}
-
-
-data class ImageData(
-    val image: Bitmap,
-    val position: Offset,
-    val imageSize: Dp = 40.dp,
-    val rotate: Float = 0f,
-    val scale: Float = 1f,
-    val scaleIconOffset: Offset = Offset.Zero,
-    val deleteIconOffset: Offset = Offset.Zero,
-    val rotateIconOffset: Offset = Offset.Zero,
-)
-
-data class RootImage(
-    val rootBitmap: Bitmap? = null,
-    val center: Offset = Offset.Zero,
-    val editType: EditeType = EditeType.NONE,
-    val originalSize: Size = Size.Zero,
-    val cropRect: Rect = Rect.Zero,
-)
-
-data class CurrentImageList(
-    val imageList: List<ImageData> = listOf(),
-    val currentIndex: Int = 0,//当前移动的图
-)
 
 class EditorViewModel : ViewModel() {
 

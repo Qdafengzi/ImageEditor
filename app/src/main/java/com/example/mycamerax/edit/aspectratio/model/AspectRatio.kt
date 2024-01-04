@@ -1,4 +1,4 @@
-package com.lyrebirdstudio.croppy.aspectratio.model
+package com.example.mycamerax.edit.aspectratio.model
 
 enum class AspectRatio(val widthRatio: Float, val heightRatio: Float) {
 
