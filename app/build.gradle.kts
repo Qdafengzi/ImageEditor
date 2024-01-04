@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.mycamerax"
+    namespace = "com.example.editor"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.mycamerax"
+        applicationId = "com.example.editor"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

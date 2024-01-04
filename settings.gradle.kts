@@ -13,6 +13,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "MyCameraX"
+rootProject.name = "ImageEditor"
 include(":app")
  

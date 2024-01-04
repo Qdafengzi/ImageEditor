@@ -5,7 +5,7 @@
     <data>
         <variable
             name="viewState"
-            type="com.example.mycamerax.edit.crop.state.CropFragmentViewState" />
+            type="com.example.editor.edit.crop.state.CropFragmentViewState" />
     </data>
 
 
@@ -101,7 +101,7 @@
         </com.google.android.material.appbar.AppBarLayout>
 
 
-        <com.example.mycamerax.edit.crop.cropview.CropView
+        <com.example.editor.edit.crop.cropview.CropView
             android:id="@+id/cropView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -128,7 +128,7 @@
             app:layout_constraintBottom_toBottomOf="@id/cropView"
             android:layout_height="wrap_content"/>
 
-        <com.example.mycamerax.edit.aspectratio.AspectRatioRecyclerView
+        <com.example.editor.edit.aspectratio.AspectRatioRecyclerView
             android:id="@+id/recyclerViewAspectRatios"
             android:layout_width="match_parent"
             android:layout_height="@dimen/size_aspect_recyclerview"
