@@ -2,7 +2,7 @@ package com.example.editor.edit.crop.util.extensions
 
 import android.graphics.Bitmap
 import android.graphics.Matrix
-import android.media.ExifInterface
+import androidx.exifinterface.media.ExifInterface
 
 
 fun Bitmap.rotateBitmap(orientation: Int): Bitmap {

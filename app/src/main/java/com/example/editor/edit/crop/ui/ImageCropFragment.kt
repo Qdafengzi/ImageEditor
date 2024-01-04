@@ -11,7 +11,7 @@ import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import com.example.editor.R
 import com.example.editor.databinding.FragmentImageCropBinding
 import com.example.editor.edit.crop.main.CropRequest
@@ -24,16 +24,16 @@ import com.example.editor.edit.crop.util.file.FileOperationRequest
 
 class ImageCropFragment : Fragment() {
 
-    private val binding: FragmentImageCropBinding by com.example.editor.edit.crop.util.delegate.inflate(R.layout.fragment_image_crop)
+    private lateinit var binding: FragmentImageCropBinding
 
-    private lateinit var viewModel: ImageCropViewModel
-
+    private val viewModel: ImageCropViewModel by lazy {
+        ViewModelProvider(this)[ImageCropViewModel::class.java]
+    }
 
     var onCancelClicked: (() -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel = ViewModelProviders.of(this)[ImageCropViewModel::class.java]
         val cropRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             arguments?.getParcelable(KEY_BUNDLE_CROP_REQUEST, CropRequest::class.java)
                 ?: CropRequest.empty()
@@ -48,6 +48,7 @@ class ImageCropFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        binding = FragmentImageCropBinding.inflate(inflater, container, false)
         viewModel.getCropRequest()?.let {
             binding.cropView.setTheme(CropTheme(R.color.white))
             binding.recyclerViewAspectRatios.setActiveColor(R.color.blue)
@@ -156,13 +157,14 @@ class ImageCropFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+
         viewModel
             .getCropViewStateLiveData()
-            .observe(this, Observer(this@ImageCropFragment::renderViewState))
+            .observe(viewLifecycleOwner, Observer(this@ImageCropFragment::renderViewState))
 
         viewModel
             .getResizedBitmapLiveData()
-            .observe(this, Observer { binding.cropView.setBitmap(it.bitmap) })
+            .observe(viewLifecycleOwner, Observer { binding.cropView.setBitmap(it.bitmap) })
 
     }
 

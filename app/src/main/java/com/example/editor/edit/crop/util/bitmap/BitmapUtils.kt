@@ -3,8 +3,8 @@ package com.example.editor.edit.crop.util.bitmap
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.media.ExifInterface
 import android.net.Uri
+import androidx.exifinterface.media.ExifInterface
 import com.example.editor.edit.crop.ui.CroppedBitmapData
 import com.example.editor.edit.crop.util.extensions.rotateBitmap
 import java.io.File
