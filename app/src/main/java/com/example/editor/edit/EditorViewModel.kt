@@ -102,7 +102,9 @@ class EditorViewModel : ViewModel() {
             _rootImageData.value.center.y - bitmap.height / 2f - padding
         )
 
-        list.add(ImageData(image = bitmap, position = rootPosition))
+        val defaultWidth = ResUtils.dp2px(40f)
+        val defaultSize = Size(defaultWidth.toFloat(), bitmap.height * defaultWidth / bitmap.width.toFloat())
+        list.add(ImageData(image = bitmap,defaultSize = defaultSize, position = rootPosition))
 
         _currentImageList.update {
             it.copy(imageList = list.toList(), currentIndex = list.size - 1)

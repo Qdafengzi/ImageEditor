@@ -61,8 +61,6 @@ fun AddCropView(viewModel: EditorViewModel,lifecycleOwner: LifecycleOwner = Loca
         }
     }
 
-    XLogger.d("旋转-------》${turnClickData.turnLeft} ${turnClickData.turnRight}")
-
     CropView{
         cropFragmentState.value = it
     }
@@ -70,13 +68,11 @@ fun AddCropView(viewModel: EditorViewModel,lifecycleOwner: LifecycleOwner = Loca
     LaunchedEffect(turnClickData) {
         cropFragmentState.value?.let { fragment ->
             if (turnClickData.turnLeft) {
-                XLogger.d("左旋转")
-                fragment.turnLeft()
+                fragment.rotate(-90f)
                 viewModel.turnLeftOrRight(left = false, right = false)
             }
             if (turnClickData.turnRight) {
-                XLogger.d("右旋转")
-                fragment.turnRight()
+                fragment.rotate(90f)
                 viewModel.turnLeftOrRight(left = false, right = false)
             }
         }

@@ -1,6 +1,7 @@
 package com.example.editor.edit
 
 import android.graphics.BitmapFactory
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,7 +21,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
@@ -32,28 +37,29 @@ import kotlinx.coroutines.launch
 
 
 @Composable
-fun ImageEditor( viewModel: EditorViewModel = viewModel()) {
+fun ImageEditor(viewModel: EditorViewModel = viewModel()) {
     XLogger.d("ImageEditor")
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     LaunchedEffect(key1 = Unit) {
-        XLogger.d("设置")
         val bitmap = BitmapFactory.decodeResource(context.resources, R.mipmap.ic_editor)
         viewModel.editorInit(bitmap)
     }
     val rootImageData = viewModel.rootImageData.collectAsState().value
     val bitmap = rootImageData.rootBitmap?.asImageBitmap()
-
     if (bitmap == null) {
-        XLogger.d("图像为空")
+        XLogger.d("image is empty")
         return
     }
 
     val editeType = rootImageData.editType
-    val imageList = viewModel.currentImageList.collectAsState().value.imageList
 
     Column(modifier = Modifier.fillMaxSize()) {
-        Box(Modifier.fillMaxWidth().aspectRatio(1f)){
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+        ) {
             //裁剪模式
             if (editeType == EditeType.CROP) {
                 //AddCrop(viewModel = viewModel)
@@ -75,37 +81,16 @@ fun ImageEditor( viewModel: EditorViewModel = viewModel()) {
                         contentDescription = "root image",
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .fillMaxSize()
-                        ,
+                            .fillMaxSize(),
                         contentScale = if (bitmap.width > bitmap.height) ContentScale.FillWidth else ContentScale.FillHeight
                     )
-                    //剪切一个
-                    //图片、文字 多个
-                    when (editeType) {
-                        EditeType.PIC -> {
-                            imageList.forEachIndexed { index, imageData ->
-                                XLogger.d("imageList draw：$imageData")
-                                key("${index}_${imageData.hashCode()}") {
-                                    AddImage(index, imageData, viewModel)
-                                }
-                            }
-                        }
-
-                        EditeType.TEXT -> {
-
-                        }
-
-                        EditeType.NONE -> {
-
-                        }
-                        else->{}
-                    }
+                    //图片、文字
+                    AddImageOrText(viewModel = viewModel)
+                    //遮罩
+                    LogoTextTopMask(viewModel)
                 }
-
             }
         }
-
-
 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
 //            Button(onClick = {
@@ -170,6 +155,69 @@ fun ImageEditor( viewModel: EditorViewModel = viewModel()) {
                 Text(text = "Rotate Right")
             }
         }
+    }
+}
+
+
+@Composable
+fun AddImageOrText(viewModel: EditorViewModel) {
+    val rootImageData = viewModel.rootImageData.collectAsState().value
+    val imageList = viewModel.currentImageList.collectAsState().value.imageList
+    when (rootImageData.editType) {
+        EditeType.PIC -> {
+            imageList.forEachIndexed { index, imageData ->
+                XLogger.d("imageList draw：$imageData")
+                key("${index}_${imageData.hashCode()}") {
+                    AddImage(index, imageData, viewModel)
+                }
+            }
+        }
+
+        EditeType.TEXT -> {
+
+        }
+
+        EditeType.NONE -> {
+
+        }
+
+        else -> {}
+    }
+}
+
+/**
+ * 添加文字 和图的时候上面的遮罩
+ */
+@Composable
+fun LogoTextTopMask(viewModel: EditorViewModel) {
+    val rootImageData = viewModel.rootImageData.collectAsState().value
+    val editeType = rootImageData.editType
+    val cropRect = rootImageData.cropRect
+
+    if (editeType == EditeType.PIC || editeType == EditeType.TEXT) {
+        Canvas(modifier = Modifier.fillMaxSize(), onDraw = {
+            val cropSize = Size(cropRect.width, cropRect.height)
+            val cropOffset = Offset(cropRect.left, cropRect.top)
+            val cropRectangle = Rect(
+                offset = cropOffset,
+                size = cropSize,
+            )
+            //裁剪区域
+            val cropPath = Path().apply {
+                addRect(cropRectangle)
+            }
+
+            //整个区域
+            val screenPath = Path().apply {
+                addRect(Rect(Offset.Zero, size))
+            }
+            //路径合成
+            val combinedPath = Path().apply {
+                op(screenPath, cropPath, PathOperation.Difference)
+            }
+            //绘制路径
+            drawPath(path = combinedPath, color = Color.White)
+        })
     }
 }
 

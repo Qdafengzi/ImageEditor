@@ -33,6 +33,8 @@ class ImageCropFragment : Fragment() {
 
     var onCancelClicked: (() -> Unit)? = null
 
+    var isRotating:Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val cropRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -65,63 +67,6 @@ class ImageCropFragment : Fragment() {
         binding.imageViewCancel.setOnClickListener {
             //取消
             onCancelClicked?.invoke()
-        }
-        binding.btnLeft.setOnClickListener {
-
-//            binding.cropView.turnLeft()
-
-            //TODO:注意合成的时候的影响
-            val currentRotation = binding.cropView.rotation
-            val targetRotation = currentRotation - 90f
-            val animator = ObjectAnimator.ofFloat(binding.cropView, "rotation", currentRotation, targetRotation)
-            animator.duration = 100 // 动画持续时间，单位为毫秒
-            animator.addListener(object :Animator.AnimatorListener{
-                override fun onAnimationStart(animation: Animator) {
-                    binding.btnLeft.isClickable = false
-                }
-
-                override fun onAnimationEnd(animation: Animator) {
-                    binding.btnLeft.isClickable = true
-                }
-
-                override fun onAnimationCancel(animation: Animator) {
-                    binding.btnLeft.isClickable = true
-                }
-
-                override fun onAnimationRepeat(animation: Animator) {
-                }
-
-            })
-            animator.start()
-//            binding.cropView.rotation -=90f
-        }
-
-
-        binding.btnRight.setOnClickListener {
-            //TODO：注意合成的时候的影响
-            val currentRotation = binding.cropView.rotation
-            val targetRotation = currentRotation + 90f
-            val animator = ObjectAnimator.ofFloat(binding.cropView, "rotation", currentRotation, targetRotation)
-            animator.duration = 100 // 动画持续时间，单位为毫秒
-            animator.addListener(object :Animator.AnimatorListener{
-                override fun onAnimationStart(animation: Animator) {
-                    binding.btnRight.isClickable = false
-                }
-
-                override fun onAnimationEnd(animation: Animator) {
-                    binding.btnRight.isClickable = true
-                }
-
-                override fun onAnimationCancel(animation: Animator) {
-                    binding.btnRight.isClickable = true
-                }
-
-                override fun onAnimationRepeat(animation: Animator) {
-                }
-
-            })
-            animator.start()
-           // binding.cropView.rotation +=90f
         }
 
         binding.imageViewApply.setOnClickListener {
@@ -157,57 +102,27 @@ class ImageCropFragment : Fragment() {
         return binding.root
     }
 
-    fun turnLeft(){
+
+    fun rotate(degree:Float){
         if (!this::binding.isInitialized) return
-        //TODO:注意合成的时候的影响
-        val currentRotation = binding.cropView.rotation
-        val targetRotation = currentRotation - 90f
-        val animator = ObjectAnimator.ofFloat(binding.cropView, "rotation", currentRotation, targetRotation)
-        animator.duration = 100 // 动画持续时间，单位为毫秒
-        animator.addListener(object :Animator.AnimatorListener{
-            override fun onAnimationStart(animation: Animator) {
-                binding.btnLeft.isClickable = false
-                binding.btnRight.isClickable = false
-            }
+        if (isRotating) return
 
-            override fun onAnimationEnd(animation: Animator) {
-                binding.btnLeft.isClickable = true
-                binding.btnRight.isClickable = true
-            }
-
-            override fun onAnimationCancel(animation: Animator) {
-                binding.btnLeft.isClickable = true
-                binding.btnRight.isClickable = true
-            }
-
-            override fun onAnimationRepeat(animation: Animator) {
-            }
-
-        })
-        animator.start()
-    }
-
-    fun turnRight(){
-        if (!this::binding.isInitialized) return
         //TODO：注意合成的时候的影响
         val currentRotation = binding.cropView.rotation
-        val targetRotation = currentRotation + 90f
+        val targetRotation = currentRotation + degree
         val animator = ObjectAnimator.ofFloat(binding.cropView, "rotation", currentRotation, targetRotation)
         animator.duration = 100 // 动画持续时间，单位为毫秒
         animator.addListener(object :Animator.AnimatorListener{
             override fun onAnimationStart(animation: Animator) {
-                binding.btnRight.isClickable = false
-                binding.btnLeft.isClickable = false
+                isRotating = true
             }
 
             override fun onAnimationEnd(animation: Animator) {
-                binding.btnRight.isClickable = true
-                binding.btnLeft.isClickable = true
+                isRotating = false
             }
 
             override fun onAnimationCancel(animation: Animator) {
-                binding.btnRight.isClickable = true
-                binding.btnLeft.isClickable = true
+                isRotating = false
             }
 
             override fun onAnimationRepeat(animation: Animator) {

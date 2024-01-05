@@ -24,7 +24,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
@@ -33,18 +37,21 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.layout.positionInParent
-import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
 import com.example.editor.R
+import com.example.editor.XLogger
 import com.example.editor.edit.data.ImageData
 import kotlinx.coroutines.coroutineScope
 import kotlin.math.PI
@@ -55,6 +62,7 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 
 
+@OptIn(ExperimentalTextApi::class)
 @Composable
 fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
     // 当前图的数据
@@ -63,6 +71,7 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
 
     val currentHandleIndex = currentImageData.currentIndex
     var currentImagePosition by remember { mutableStateOf(currentImage.position) }
+    val screenWidthDp = LocalConfiguration.current.screenWidthDp
 
     // 当前的旋转角度
     var currentRotate by remember { mutableStateOf(currentImage.rotate) }
@@ -74,7 +83,8 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
 
     // 当前的缩放
     var scale by remember { mutableStateOf(currentImage.scale) }
-    //var imageSize by remember { mutableStateOf(currentImage.imageSize) }
+//    var imageSize by remember { mutableStateOf(currentImage.imageSize) }
+//    var imageFrameSize by remember { mutableStateOf(Size.Zero) }
 
     Box(
         modifier = Modifier
@@ -86,9 +96,21 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
             .offset {
                 IntOffset(currentImagePosition.x.roundToInt(), currentImagePosition.y.roundToInt())
             }
-            .graphicsLayer {
-                rotationZ = currentRotate
-                transformOrigin = TransformOrigin.Center
+            .rotate(currentRotate)
+            .onSizeChanged {
+                XLogger.d("--------->onSizeChanged")
+//                imageFrameSize = it.toSize()
+            }
+            .drawBehind {
+                // 外部矩形框
+                if (currentHandleIndex == index) {
+                    drawRect(
+                        color = Color(0xFF0099A1),
+                        topLeft = Offset(10.dp.toPx(), 10.dp.toPx()),
+                        size = Size(size.width - 20.dp.toPx(), size.height - 20.dp.toPx()),
+                        style = Stroke(width = 1.dp.toPx()),
+                    )
+                }
             }
         ) {
             Image(
@@ -98,13 +120,17 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                     .padding(10.dp)
                     .wrapContentSize()
                     .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
+//                        scaleX = scale
+//                        scaleY = scale
 //                        rotationZ =  currentRotate
                         transformOrigin = TransformOrigin.Center
                     }
+                    .scale(scale)
+                    .onSizeChanged {
+
+                    }
                     .onGloballyPositioned { layoutCoordinates ->
-                        com.example.editor.XLogger.d("onGloballyPositioned-------------->")
+                        XLogger.d("onGloballyPositioned-------------->")
                         //val angleRadians = Math.toRadians(currentRotate.toDouble()).toFloat()
                         val size = layoutCoordinates.size.toSize()
                         //因为是按照中心点进行缩放 所以其缩放距离是一般的缩放比
@@ -133,14 +159,14 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                             awaitPointerEventScope {
                                 var pointSize = 1
                                 while (true) {
-                                    com.example.editor.XLogger.d("fingers event start---------->")
+                                    XLogger.d("fingers event start---------->")
                                     val downPointerInputChange = awaitFirstDown()
                                     drag(
                                         downPointerInputChange.id,
                                         onDrag = {
                                             pointSize = currentEvent.changes.size
                                             if (pointSize == 1) {
-                                                com.example.editor.XLogger.d("one fingers drag---------->")
+                                                XLogger.d("one fingers drag---------->")
                                                 //乘以 缩放的倍数 这样无论缩放多少倍 都不会影响 移动的距离的偏移量
                                                 // 根据旋转的角度 计算 x y 的偏移量
 
@@ -155,10 +181,26 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                                                 val rotatedX = it.positionChange().x * cosAngle - it.positionChange().y * sinAngle
                                                 val rotatedY = it.positionChange().x * sinAngle + it.positionChange().y * cosAngle
 
+
+                                                val positionY = currentImagePosition.y + rotatedY * scale
+
+                                                val rec = boundingRectangleSize(imageData.defaultSize.height * scale.toDouble(), imageData.defaultSize.width * scale.toDouble(), angleInRadians)
+                                                //positionY +rec.first + 20.dp.toPx()*2 *scale = screenWidthDp.dp.toPx()
+                                                val maxHeight = screenWidthDp.dp.toPx() - 20.dp.toPx() * 2 * scale - rec.first.toFloat()
+
+                                                val currentY: Float = if (positionY < 0) {
+                                                    0f
+                                                } else if (positionY > maxHeight) {
+                                                    maxHeight
+                                                } else {
+                                                    positionY
+                                                }
+                                                XLogger.d("new position:${positionY}  width:${screenWidthDp.dp.toPx()} 20:${20.dp.toPx()} imageFrameSize:${currentY}")
+
                                                 // 更新位置
-                                                currentImagePosition = Offset(currentImagePosition.x + rotatedX * scale, currentImagePosition.y + rotatedY * scale)
+                                                currentImagePosition = Offset(currentImagePosition.x + rotatedX * scale, positionY)
                                             } else {
-                                                com.example.editor.XLogger.d("two fingers drag---------->")
+                                                XLogger.d("two fingers drag---------->")
                                                 val zoomChange = currentEvent.calculateZoom()
                                                 scale *= zoomChange
                                                 currentRotate += currentEvent.calculateRotation()
@@ -171,10 +213,10 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
 
                                     if (dragUpOrCancelPointerInputChange == null) {
                                         if (pointSize == 1) {
-                                            com.example.editor.XLogger.d("one fingers drag up---------->")
+                                            XLogger.d("one fingers drag up---------->")
                                             viewModel.updateImagePosition(index, currentImagePosition)
                                         } else {
-                                            com.example.editor.XLogger.d("two fingers drag up---------->")
+                                            XLogger.d("two fingers drag up---------->")
                                             viewModel.updateScale(scale)
                                             viewModel.updateIconsOffset(deleteIconOffset, rotateIconOffset, scaleIconOffset)
                                             viewModel.updateRotate(currentRotate)
@@ -185,18 +227,12 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                             }
                         }
                     }
-                    .drawBehind {
-                        // 外部矩形框
-                        if (currentHandleIndex == index) {
-                            drawRect(
-                                color = Color(0xFF0099A1),
-                                style = Stroke(width = 1.dp.toPx()),
-                            )
-                        }
-                    }
+                   ,
+                contentScale =if (imageData.image.width>imageData.image.height) ContentScale.FillWidth else ContentScale.FillHeight
             )
 
             if (currentHandleIndex == index) {
+                val textMeasurer = rememberTextMeasurer()
                 Image(
                     modifier = Modifier
                         .size(20.dp)
@@ -206,7 +242,15 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                         }
                         .clickable(onClick = {
                             viewModel.deleteImage(index)
-                        }),
+                        })
+                        .drawWithContent {
+                            drawContent()
+                            drawText(textMeasurer = textMeasurer,
+                                text = "${currentImagePosition.x.toInt()} ${currentImagePosition.y.toInt()}",
+                                style = TextStyle(fontSize = 8.sp, color = Color.White)
+                            )
+                        }
+                    ,
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_editor_delete),
                     contentDescription = "delete"
                 )
@@ -217,16 +261,7 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                         .offset {
                             IntOffset(rotateIconOffset.x.toInt(), rotateIconOffset.y.toInt())
                         }
-                        .onSizeChanged {
-                            com.example.editor.XLogger.d("rotate====onSizeChanged:${it.center.x}")
-
-                        }
-                        .onPlaced {
-                            val localToWindow = it.localToWindow(Offset.Zero)
-                            com.example.editor.XLogger.d("rotate====onPlaced-----positionInWindow:${it.positionInWindow()}  positionInParent:${it.positionInParent()} positionInRoot:${it.positionInRoot()}")
-                        }
                         .pointerInput(imageData.image.hashCode()) {
-                            com.example.editor.XLogger.d("------------------>开始旋转")
                             val sensitivity = 1f
                             var startX = 0f
                             var startY = 0f
@@ -252,15 +287,15 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                                     dragAmountTotalY += dragAmount.y
                                     val dx = startX + dragAmountTotalX - size.width / 2
                                     val dy = startY + dragAmountTotalY - size.height / 2
-                                    com.example.editor.XLogger.d("开始旋转------------>dragAmount:${dragAmount}   dx:$dx  dy$dy")
+                                    XLogger.d("开始旋转------------>dragAmount:${dragAmount}   dx:$dx  dy$dy")
                                     currentRotate = (atan2(dy / sensitivity, dx / sensitivity) * 180 / PI).toFloat()
                                     if (currentRotate < 0) {
                                         currentRotate += 360f
                                     }
-                                    com.example.editor.XLogger.d("rotate drag onDrag currentRotate:$currentRotate  currentRotate:${currentRotate}  dx:${dx} dy:${dy}")
+                                    XLogger.d("rotate drag onDrag currentRotate:$currentRotate  currentRotate:${currentRotate}  dx:${dx} dy:${dy}")
                                 },
                                 onDragEnd = {
-                                    com.example.editor.XLogger.d("rotate drag onDragEnd:$currentRotate")
+                                    XLogger.d("rotate drag onDragEnd:$currentRotate")
                                     viewModel.updateRotate(currentRotate)
                                     viewModel.updateIconsOffset(deleteIconOffset, rotateIconOffset, scaleIconOffset)
                                 }
@@ -278,19 +313,25 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                             IntOffset(scaleIconOffset.x.toInt(), scaleIconOffset.y.toInt())
                         }
                         .pointerInput(imageData.image.hashCode()) {
+                            val maxScaleWith = screenWidthDp.dp.toPx() / currentImage.defaultSize.width
+                            val maxScaleHeight = screenWidthDp.dp.toPx() / currentImage.defaultSize.height
+                            val maxScale = minOf(maxScaleWith, maxScaleHeight)
+
                             detectDragGestures(onDragStart = {
-                                com.example.editor.XLogger.d("scale drag onDragStart")
+                                XLogger.d("scale drag onDragStart")
                             }, onDragEnd = {
                                 viewModel.updateScale(scale)
                                 viewModel.updateIconsOffset(deleteIconOffset, rotateIconOffset, scaleIconOffset)
-                                com.example.editor.XLogger.d("scale drag onDragEnd scale:${scale}")
+                                XLogger.d("scale drag onDragEnd scale:${scale}")
                             }, onDragCancel = {
-                                com.example.editor.XLogger.d("scale drag onDragCancel")
+                                XLogger.d("scale drag onDragCancel")
                             }, onDrag = { change, _ ->
                                 val newScale = scale * (1 + change.positionChange().y / this.size.height)
-                                scale = newScale.coerceIn(0.2f, 10f) // 限制scale的取值范围
+                                XLogger.d("maxScale:${maxScale}")
+                                scale = newScale.coerceIn(0.2f, maxScale) // 限制scale的取值范围
+                                //缩放尺寸不能超过
                                 //imageSize = (scale * 40).dp.coerceIn(40.dp, 1000.dp)
-                                com.example.editor.XLogger.d("scale drag onDrag scale:$scale")
+                                XLogger.d("scale drag onDrag scale:$scale")
                             })
                         },
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_editor_scale),
@@ -299,5 +340,11 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
             }
         }
     }
+}
+
+fun boundingRectangleSize(height: Double, width: Double, theta: Double): Pair<Double, Double> {
+    val L = abs(height * cos(theta)) + abs(width * sin(theta))
+    val W = abs(height * sin(theta)) + abs(width * cos(theta))
+    return Pair(L, W)
 }
 
