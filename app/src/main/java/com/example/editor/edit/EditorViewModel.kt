@@ -1,6 +1,7 @@
 package com.example.editor.edit
 
 import android.graphics.Bitmap
+import android.graphics.RectF
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -183,23 +184,6 @@ class EditorViewModel : ViewModel() {
         }
     }
 
-    fun updateIconsOffset(
-        deleteIconOffset: Offset,
-        rotateIconOffset: Offset,
-        scaleIconOffset: Offset
-    ) {
-        val list = _currentImageList.value.imageList.toMutableList()
-        list[_currentImageList.value.currentIndex] =
-            list[_currentImageList.value.currentIndex].copy(
-                deleteIconOffset = deleteIconOffset,
-                rotateIconOffset = rotateIconOffset,
-                scaleIconOffset = scaleIconOffset
-            )
-        _currentImageList.update {
-            it.copy(imageList = list.toList())
-        }
-    }
-
     fun updateRotate(angle: Float) {
         val list = _currentImageList.value.imageList.toMutableList()
         list[_currentImageList.value.currentIndex] =
@@ -212,15 +196,19 @@ class EditorViewModel : ViewModel() {
     }
 
 
-//    fun updateTouchType(type:TouchType){
-//        val list = _currentImageList.value.imageList.toMutableList()
-//        list[_currentImageList.value.currentIndex]  = list[_currentImageList.value.currentIndex].copy(
-//            eventType = type
-//        )
-//        _currentImageList.update {
-//            it.copy(imageList = list.toList())
-//        }
-//    }
+
+    fun updateControlButtonTouchPosition(deleteRectF: RectF, rotateRectF: RectF, scaleRectF: RectF) {
+        val list = _currentImageList.value.imageList.toMutableList()
+        list[_currentImageList.value.currentIndex] =
+            list[_currentImageList.value.currentIndex].copy(
+                deleteRectF= deleteRectF,
+                rotateRectF = rotateRectF,
+                scaleRectF = scaleRectF
+            )
+        _currentImageList.update {
+            it.copy(imageList = list.toList())
+        }
+    }
 
 
     fun addCrop() {
@@ -240,5 +228,6 @@ class EditorViewModel : ViewModel() {
             it.copy(turnLeft = left, turnRight = right)
         }
     }
+
 
 }
