@@ -168,7 +168,7 @@ fun AddImageOrText(viewModel: EditorViewModel) {
             imageList.forEachIndexed { index, imageData ->
                 XLogger.d("imageList draw：$imageData")
                 key("${index}_${imageData.hashCode()}") {
-                    AddImage(index, imageData, viewModel)
+                    AddImage2(index, imageData, viewModel)
                 }
             }
         }

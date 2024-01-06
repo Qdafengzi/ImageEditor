@@ -1,6 +1,7 @@
 package com.example.editor.edit.data
 
 import android.graphics.Bitmap
+import android.graphics.RectF
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.Dp
@@ -16,4 +17,7 @@ data class ImageData(
     val scaleIconOffset: Offset = Offset.Zero,
     val deleteIconOffset: Offset = Offset.Zero,
     val rotateIconOffset: Offset = Offset.Zero,
+    val deleteRectF: RectF = RectF(),
+    val rotateRectF: RectF = RectF(),
+    val scaleRectF: RectF = RectF(),
 )

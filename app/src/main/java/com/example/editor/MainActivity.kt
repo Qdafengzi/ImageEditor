@@ -12,6 +12,7 @@ class MainActivity : AppCompatActivity() {
         setContent {
 //            RotationExample3()
             ImageEditor()
+//            ScaledImageViewWithFixedSizeIconAndSlider()
         }
     }
 }
