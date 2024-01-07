@@ -1,7 +1,8 @@
 package com.example.editor.demo
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -22,16 +23,17 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.editor.R
+import com.example.editor.XLogger
+import kotlinx.coroutines.coroutineScope
 import kotlin.math.PI
 import kotlin.math.atan2
 
 
 @Composable
 fun RotationExample3() {
+    XLogger.d("=========>RotationExample3")
     var angle by remember { mutableStateOf(0f) }
     val maxAngle = 360f
-    val iconDistance = 100f // Adjust the distance between the icon and the image as needed
-
 
     Box(
         contentAlignment = Alignment.Center,
@@ -63,15 +65,35 @@ fun RotationExample3() {
 //                    translationY = (iconDistance * sin(radians)).toFloat()
 //                    rotationZ = angle
 //                }
-                .pointerInput(Unit) {
-                    detectDragGestures { change, _ ->
-                        val dx = change.position.x - size.width/2
-                        val dy = change.position.y - size.height/2
-                        angle = (atan2(dy, dx) * 180 / PI).toFloat()
-                        if (angle < 0) angle += maxAngle
-                    }
+                .pointerInput(Unit){
+                    coroutineScope {
+                        awaitPointerEventScope {
+                            while (true){
+                                val down = awaitFirstDown()
+                                drag(
+                                    down.id,
+                                    onDrag = {
+                                        val dx = it.position.x - size.width/2
+                                        val dy = it.position.y - size.height/2
+                                        angle = (atan2(dy, dx) * 180 / PI).toFloat()
+                                        if (angle < 0) angle += maxAngle
+                                        XLogger.d("-============$angle")
+                                    })
+                            }
 
+                        }
+                    }
                 }
+//                .pointerInput(Unit) {
+//                    detectDragGestures { change, _ ->
+//                        val dx = change.position.x - size.width/2
+//                        val dy = change.position.y - size.height/2
+//                        angle = (atan2(dy, dx) * 180 / PI).toFloat()
+//                        if (angle < 0) angle += maxAngle
+//                        XLogger.d("-============$angle")
+//                    }
+//
+//                }
         )
     }
 }

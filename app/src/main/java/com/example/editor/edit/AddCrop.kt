@@ -32,7 +32,7 @@ import kotlinx.coroutines.coroutineScope
 fun AddCrop(viewModel: EditorViewModel) {
     val context = LocalContext.current
     val rootImageData = viewModel.rootImageData.collectAsState().value
-    val cropRect = rootImageData.cropRect
+    val cropRect = rootImageData.destRect
     val rootBitmap = rootImageData.rootBitmap?:return
 
 
@@ -105,9 +105,9 @@ fun AddCrop(viewModel: EditorViewModel) {
 
             if (touchFlag) {
                 //每个格子的宽度
-                val cellWidth = (cropRect.width - rectLineWidth * 2) / 3
+                val cellWidth = (cropRect.width() - rectLineWidth * 2) / 3
                 //每个格子的高度
-                val cellHeight = (cropRect.height - rectLineWidth * 2) / 3
+                val cellHeight = (cropRect.height() - rectLineWidth * 2) / 3
                 // 绘制水平线
                 (0..3).forEachIndexed { index, _ ->
                     drawLine(
@@ -117,7 +117,7 @@ fun AddCrop(viewModel: EditorViewModel) {
                             cropRect.top + index * cellHeight + rectLineWidth
                         ),
                         end = Offset(
-                            cropRect.left + cropRect.width - rectLineWidth,
+                            cropRect.left + cropRect.width() - rectLineWidth,
                             cropRect.top + index * cellHeight + rectLineWidth
                         ),
                         strokeWidth = 1.dp.toPx()
@@ -134,7 +134,7 @@ fun AddCrop(viewModel: EditorViewModel) {
                         ),
                         end = Offset(
                             cropRect.left + rectLineWidth + index * cellWidth,
-                            cropRect.top + cropRect.height - rectLineWidth
+                            cropRect.top + cropRect.height() - rectLineWidth
                         ),
                         strokeWidth = 1.dp.toPx()
                     )
@@ -146,7 +146,7 @@ fun AddCrop(viewModel: EditorViewModel) {
             //绘制 裁剪区域
             run {
                 //----------------------------裁剪区域亮 非裁剪区域黑色遮罩 开始-----------------------------------------//
-                val cropSize = Size(cropRect.width, cropRect.height)
+                val cropSize = Size(cropRect.width(), cropRect.height())
                 val cropOffset = Offset(cropRect.left, cropRect.top)
                 val cropRectangle = Rect(
                     offset = cropOffset,
@@ -194,15 +194,15 @@ fun AddCrop(viewModel: EditorViewModel) {
                 //左下角
                 drawLine(
                     color = Color.White,
-                    start = Offset(cropRect.left, cropRect.top + cropRect.height - rectHeight),
-                    end = Offset(cropRect.left, cropRect.top + cropRect.height),
+                    start = Offset(cropRect.left, cropRect.top + cropRect.height() - rectHeight),
+                    end = Offset(cropRect.left, cropRect.top + cropRect.height()),
                     strokeWidth = outRectStrokeWidth,
                     cap = StrokeCap.Round
                 )
                 drawLine(
                     color = Color.White,
-                    start = Offset(cropRect.left, cropRect.top + cropRect.height),
-                    end = Offset(cropRect.left + rectHeight, cropRect.top + cropRect.height),
+                    start = Offset(cropRect.left, cropRect.top + cropRect.height()),
+                    end = Offset(cropRect.left + rectHeight, cropRect.top + cropRect.height()),
                     strokeWidth = outRectStrokeWidth,
                     cap = StrokeCap.Round
                 )
@@ -210,15 +210,15 @@ fun AddCrop(viewModel: EditorViewModel) {
                 //右上角
                 drawLine(
                     color = Color.White,
-                    start = Offset(cropRect.width + cropRect.left - rectHeight, cropRect.top),
-                    end = Offset(cropRect.width + cropRect.left, cropRect.top),
+                    start = Offset(cropRect.width() + cropRect.left - rectHeight, cropRect.top),
+                    end = Offset(cropRect.width() + cropRect.left, cropRect.top),
                     strokeWidth = outRectStrokeWidth,
                     cap = StrokeCap.Round
                 )
                 drawLine(
                     color = Color.White,
-                    start = Offset(cropRect.width + cropRect.left, cropRect.top),
-                    end = Offset(cropRect.width + cropRect.left, cropRect.top + rectHeight),
+                    start = Offset(cropRect.width() + cropRect.left, cropRect.top),
+                    end = Offset(cropRect.width() + cropRect.left, cropRect.top + rectHeight),
                     strokeWidth = outRectStrokeWidth,
                     cap = StrokeCap.Round
                 )
@@ -226,15 +226,15 @@ fun AddCrop(viewModel: EditorViewModel) {
                 //右下角
                 drawLine(
                     color = Color.White,
-                    start = Offset(cropRect.width + cropRect.left, cropRect.top + cropRect.height - rectHeight),
-                    end = Offset(cropRect.width + cropRect.left, cropRect.top + cropRect.height),
+                    start = Offset(cropRect.width() + cropRect.left, cropRect.top + cropRect.height() - rectHeight),
+                    end = Offset(cropRect.width() + cropRect.left, cropRect.top + cropRect.height()),
                     strokeWidth = outRectStrokeWidth,
                     cap = StrokeCap.Round
                 )
                 drawLine(
                     color = Color.White,
-                    start = Offset(cropRect.width + cropRect.left, cropRect.top + cropRect.height),
-                    end = Offset(cropRect.width + cropRect.left - rectHeight, cropRect.top + cropRect.height),
+                    start = Offset(cropRect.width() + cropRect.left, cropRect.top + cropRect.height()),
+                    end = Offset(cropRect.width() + cropRect.left - rectHeight, cropRect.top + cropRect.height()),
                     strokeWidth = outRectStrokeWidth,
                     cap = StrokeCap.Round
                 )
@@ -243,7 +243,7 @@ fun AddCrop(viewModel: EditorViewModel) {
             //画四个边的中线
             run {
                 //上
-                val lineLeft = (cropRect.width - midRectLength) / 2f
+                val lineLeft = (cropRect.width() - midRectLength) / 2f
                 drawLine(
                     color = Color.White,
                     start = Offset(cropRect.left + lineLeft, cropRect.top),
@@ -255,14 +255,14 @@ fun AddCrop(viewModel: EditorViewModel) {
                 //下
                 drawLine(
                     color = Color.White,
-                    start = Offset(cropRect.left + lineLeft, cropRect.top + cropRect.height),
-                    end = Offset(cropRect.left + lineLeft + midRectLength, cropRect.top + cropRect.height),
+                    start = Offset(cropRect.left + lineLeft, cropRect.top + cropRect.height()),
+                    end = Offset(cropRect.left + lineLeft + midRectLength, cropRect.top + cropRect.height()),
                     strokeWidth = outRectStrokeWidth,
                     cap = StrokeCap.Round
                 )
 
 
-                val lineTop = (cropRect.width - midRectLength) / 2f
+                val lineTop = (cropRect.width() - midRectLength) / 2f
                 //左
                 drawLine(
                     color = Color.White,
@@ -275,8 +275,8 @@ fun AddCrop(viewModel: EditorViewModel) {
                 //右
                 drawLine(
                     color = Color.White,
-                    start = Offset(cropRect.left + cropRect.width, cropRect.top + lineTop),
-                    end = Offset(cropRect.left + cropRect.width, cropRect.top + lineTop + midRectLength),
+                    start = Offset(cropRect.left + cropRect.width(), cropRect.top + lineTop),
+                    end = Offset(cropRect.left + cropRect.width(), cropRect.top + lineTop + midRectLength),
                     strokeWidth = outRectStrokeWidth,
                     cap = StrokeCap.Round
                 )

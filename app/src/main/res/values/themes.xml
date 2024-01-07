@@ -15,4 +15,9 @@
         <item name="android:layout_height">0.5dp</item>
         <item name="android:background">#fff</item>
     </style>
+
+    <style name="popwin_anim_style">
+        <item name="android:windowEnterAnimation">@anim/menushow</item>
+        <item name="android:windowExitAnimation">@anim/menuhide</item>
+    </style>
 </resources>

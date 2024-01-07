@@ -21,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -81,7 +80,7 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
 
     // 当前的缩放
     var scale by remember { mutableStateOf(currentImage.scale) }
-
+    XLogger.d("addImage22222222222222222")
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -96,11 +95,12 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                     IntOffset(currentImagePosition.x.roundToInt(), currentImagePosition.y.roundToInt())
                 }
                 .graphicsLayer {
+                    rotationZ = currentRotate
                     transformOrigin = TransformOrigin.Center
                 }
-                .rotate(currentRotate)
+//                    .rotate(currentRotate)
                 .scale(scale)
-                .pointerInput(imageData.image.hashCode()) {
+                .pointerInput(Unit) {
                     coroutineScope {
                         awaitPointerEventScope {
                             var pointSize = 1
@@ -109,8 +109,17 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                             val maxScale = minOf(maxScaleWith, maxScaleHeight)
                             var touchType: TouchType = TouchType.NONE
 
+                            var startX = 0f
+                            var startY = 0f
+                            var dragAmountTotalX = 0f
+                            var dragAmountTotalY = 0f
+
                             while (true) {
                                 val down = awaitFirstDown()
+                                startX = down.position.x
+                                startY = down.position.y
+
+
                                 XLogger.d("fingers event start-${deleteRectF}--------->${down.position.x} ${down.position.y}")
                                 //如果是删除区域
                                 XLogger.d("按钮位置测试 点击:${down.position}")
@@ -120,11 +129,9 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                                 } else if (currentHandleIndex == index && rotateRectF.contains(down.position.x, down.position.y)) {
                                     XLogger.d("按钮位置测试 旋转:${down.position}")
                                     touchType = TouchType.ROTATE
-                                    XLogger.d("区域检测 旋转按钮区域")
                                 } else if (currentHandleIndex == index && scaleRectF.contains(down.position.x, down.position.y)) {
                                     XLogger.d("按钮位置测试 缩放:${down.position}")
                                     touchType = TouchType.SCALE
-                                    XLogger.d("区域检测 缩放按钮区域")
                                 } else {
                                     XLogger.d("区域检测 其他区域")
                                     touchType = TouchType.NONE
@@ -153,9 +160,12 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                                                     val rotatedY = it.positionChange().x * sinAngle + it.positionChange().y * cosAngle
 
 
-                                                    val positionY = currentImagePosition.y + rotatedY * scale
+                                                    var positionY = currentImagePosition.y + rotatedY * scale
+                                                    if (positionY >= (screenWidthDp.dp.toPx() - size.height)) {
+                                                        positionY = (screenWidthDp.dp.toPx() - size.height)
+                                                    }
 
-                                                    XLogger.d("new position:${positionY}  width:${screenWidthDp.dp.toPx()} 20:${20.dp.toPx()} positionY:${positionY}")
+                                                    XLogger.d("new positionY:${positionY}  width:${screenWidthDp.dp.toPx()} 20:${20.dp.toPx()} y:${it.position.y}")
 
                                                     // 更新位置
                                                     currentImagePosition = Offset(currentImagePosition.x + rotatedX * scale, positionY)
@@ -169,11 +179,21 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                                                 }
 
                                                 TouchType.ROTATE -> {
-                                                    XLogger.d("区域检测 旋转区域handle-------------------->")
-                                                    val dx = it.position.x - size.width / 2
-                                                    val dy = it.position.y - size.height / 2
-                                                    currentRotate = (atan2(dy, dx) * 180 / PI).toFloat()
-                                                    if (currentRotate < 0) currentRotate += 360f
+                                                    dragAmountTotalX += it.positionChange().x
+                                                    dragAmountTotalY += it.positionChange().y
+                                                    val dx = startX + dragAmountTotalX - size.width / 2
+                                                    val dy = startY + dragAmountTotalY - size.height / 2
+                                                    currentRotate = (atan2(dy , dx ) * 180 / PI).toFloat()
+                                                    if (currentRotate < 0) {
+                                                        currentRotate += 360f
+                                                    }
+
+
+//                                                        val dx = it.position.x - size.width/2
+//                                                        val dy = it.position.y - size.height/2
+//                                                        currentRotate = (atan2(dy, dx) * 180 / PI).toFloat()
+//                                                        if (currentRotate < 0) currentRotate += 360f
+                                                    XLogger.d("区域检测 旋转区域handle-------------------->$currentRotate")
                                                 }
                                             }
                                         } else {
@@ -196,6 +216,7 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                                             TouchType.SCALE -> {
                                                 viewModel.updateScale(scale)
                                             }
+
                                             TouchType.ROTATE -> {
                                                 viewModel.updateRotate(currentRotate)
                                             }
@@ -211,7 +232,7 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                                     }
                                     viewModel.bringImageToFront(index)
                                     //更新三个触摸按钮的位置
-                                    viewModel.updateControlButtonTouchPosition(deleteRectF,rotateRectF,scaleRectF)
+                                    viewModel.updateControlButtonTouchPosition(deleteRectF, rotateRectF, scaleRectF)
                                 }
                             }
                         }
@@ -262,7 +283,7 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
 
 
                         val scaleLeft = size.width - iconHalf / scale
-                        XLogger.d("触摸缩放：$scale height:${size.height} deletePadding:${deletePadding} rotateTop:${rotateTop}  width:${size.width} center:${this.center} ")
+                        //XLogger.d("触摸缩放：$scale height:${size.height} deletePadding:${deletePadding} rotateTop:${rotateTop}  width:${size.width} center:${this.center} ")
                         translate(left = scaleLeft, top = rotateTop) {
                             scale(scale = 1f) {
                                 with(scalePainter) {
@@ -277,7 +298,7 @@ fun AddImage(index: Int, imageData: ImageData, viewModel: EditorViewModel) {
                         rotateRectF = RectF(-iconHalf, size.height - iconHalf * 2, iconHalf * 2, size.height + iconHalf * 2)
                         //drawRect(color = Color.Green, topLeft = Offset(-iconHalf,size.height - iconHalf * 2),Size(abs(iconHalf * 2+iconHalf),abs(size.height + iconHalf*2 - (size.height - iconHalf * 2))))
                         scaleRectF = RectF(size.width - iconHalf * 2, size.height - iconHalf * 2, size.width + iconHalf, size.height + iconHalf * 2)
-                        //XLogger.d("按钮位置测试 绘制:${scaleRectF}")
+                        XLogger.d("按钮位置测试 绘制:${deleteRectF} $scale")
                         //drawRect(color = Color.Green, topLeft = Offset(size.width - iconHalf*2,size.height - iconHalf * 2),Size(abs(size.width + iconHalf -(size.width - iconHalf*2)),abs(size.height + iconHalf*2 - (size.height - iconHalf * 2))))
                     }
                 },

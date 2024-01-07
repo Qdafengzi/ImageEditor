@@ -192,11 +192,11 @@ fun AddImageOrText(viewModel: EditorViewModel) {
 fun LogoTextTopMask(viewModel: EditorViewModel) {
     val rootImageData = viewModel.rootImageData.collectAsState().value
     val editeType = rootImageData.editType
-    val cropRect = rootImageData.cropRect
+    val cropRect = rootImageData.destRect
 
     if (editeType == EditeType.PIC || editeType == EditeType.TEXT) {
         Canvas(modifier = Modifier.fillMaxSize(), onDraw = {
-            val cropSize = Size(cropRect.width, cropRect.height)
+            val cropSize = Size(cropRect.width(), cropRect.height())
             val cropOffset = Offset(cropRect.left, cropRect.top)
             val cropRectangle = Rect(
                 offset = cropOffset,

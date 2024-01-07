@@ -1,12 +1,14 @@
 package com.example.editor.edit
 
 import android.graphics.Bitmap
+import android.graphics.Matrix
+import android.graphics.Rect
 import android.graphics.RectF
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.editor.XLogger
 import com.example.editor.edit.data.CurrentImageList
 import com.example.editor.edit.data.ImageData
 import com.example.editor.edit.data.RootImage
@@ -19,6 +21,11 @@ import kotlinx.coroutines.launch
 
 
 class EditorViewModel : ViewModel() {
+
+    companion object{
+        const val  HELP_BOX_PAD= 25
+
+    }
 
     private val _rootImageData = MutableStateFlow(RootImage())
     val rootImageData = _rootImageData.asStateFlow()
@@ -37,37 +44,72 @@ class EditorViewModel : ViewModel() {
 
     fun editorInit(bitmap: Bitmap) {
         viewModelScope.launch {
-            val originalBitmapRect = if (bitmap.height >= bitmap.width) {
+            val matrix = Matrix()
+            val destRect = if (bitmap.height >= bitmap.width) {
                 //以高度为准进行缩放
                 //屏幕高度
                 val screenWidth = ResUtils.screenWidth.toFloat()
                 val zoomRatio = screenWidth / bitmap.height.toFloat()
                 val widthOfZoom = bitmap.width * zoomRatio
                 val left = (screenWidth - widthOfZoom) * 0.5f
-                com.example.editor.XLogger.d("zoomRatio----screenWidth:${ResUtils.screenWidth}")
-                com.example.editor.XLogger.d("zoomRatio----width:${bitmap.width}  height:${bitmap.height}-- width:${widthOfZoom}---->zoomRatio:${zoomRatio} left:$left")
+                XLogger.d("zoomRatio----screenWidth:${ResUtils.screenWidth}")
+                XLogger.d("zoomRatio----width:${bitmap.width}  height:${bitmap.height}-- width:${widthOfZoom}---->zoomRatio:${zoomRatio} left:$left")
                 //1080 - 854.1818  /2
                 //zoomRatio----width:435  height:550-- width:854.1818---->zoomRatio:1.9636364 x:112.90909
-                Rect(left, 0f, left + widthOfZoom, screenWidth)
-
+               val rect =  RectF(left, 0f, left + widthOfZoom, screenWidth)
+                matrix.postTranslate(rect.left, rect.top)
+                matrix.postScale(
+                    widthOfZoom/bitmap.width,
+                    screenWidth / bitmap.height,
+                    rect.left,
+                    rect.top
+                )
+                rect
             } else {
                 val screenWidth = ResUtils.screenWidth.toFloat()
                 val zoomRatio = screenWidth / bitmap.width.toFloat()
                 val heightOfZoom = bitmap.height * zoomRatio
                 val top = (screenWidth - heightOfZoom) * 0.5f
-                Rect(0f, top, screenWidth, top + heightOfZoom)
+                val rect =  RectF(0f, top, screenWidth, top + heightOfZoom)
+                matrix.postTranslate(rect.left, rect.top)
+                matrix.postScale(
+                    screenWidth / bitmap.width,
+                    heightOfZoom / bitmap.height,
+                    rect.left,
+                    rect.top
+                )
+                rect
             }
+
+            val initWidth = destRect.width()
+
+            val helpBox = RectF(destRect)
+            helpBox.left -= HELP_BOX_PAD
+            helpBox.right += HELP_BOX_PAD
+            helpBox.top -= HELP_BOX_PAD
+            helpBox.bottom += HELP_BOX_PAD
+
+            val helpToolsRect = Rect(0, 0, ResUtils.dp2px(20f), ResUtils.dp2px(20f))
+
+
+
+
 
             _rootImageData.update {
                 it.copy(
                     rootBitmap = bitmap,
                     originalSize = Size(bitmap.width.toFloat(), bitmap.height.toFloat()),
-                    cropRect = originalBitmapRect
+                    destRect = destRect,
+                    initWidth = initWidth,
+                    matrix = matrix,
+                    helpBox =helpBox ,
+
                 )
             }
             bitmapQueue.add(bitmap)
         }
     }
+
 
     fun updateBitmap(bitmap: Bitmap) {
         viewModelScope.launch {
@@ -76,7 +118,7 @@ class EditorViewModel : ViewModel() {
             }
             bitmapQueue.add(bitmap)
 
-            com.example.editor.XLogger.d("图像：${_rootImageData.value.rootBitmap?.height}")
+            XLogger.d("图像：${_rootImageData.value.rootBitmap?.height}")
         }
 
     }
@@ -116,12 +158,12 @@ class EditorViewModel : ViewModel() {
         }
 
         _currentImageList.value.imageList.forEachIndexed { index, imageData ->
-            com.example.editor.XLogger.d("增加的hash:${index}  ${imageData.hashCode()}")
+            XLogger.d("增加的hash:${index}  ${imageData.hashCode()}")
         }
     }
 
     fun deleteImage(index: Int) {
-        com.example.editor.XLogger.d("删除：${index}")
+        XLogger.d("删除：${index}")
         val list = _currentImageList.value.imageList.toMutableList()
         list.removeAt(index)
         val newSize = (list.size - 1)
@@ -151,14 +193,14 @@ class EditorViewModel : ViewModel() {
         _currentImageList.update {
             it.copy(imageList = list.toList())
         }
-        com.example.editor.XLogger.d("前置成功最后一个是：${_currentImageList.value.imageList.last()}")
+        XLogger.d("前置成功最后一个是：${_currentImageList.value.imageList.last()}")
     }
 
     /**
      * 更新当前处理的图片
      */
     private fun updateHandleImageIndex(index: Int) {
-        com.example.editor.XLogger.d("current index $index")
+        XLogger.d("current index $index")
         _currentImageList.update {
             it.copy(currentIndex = index)
         }
