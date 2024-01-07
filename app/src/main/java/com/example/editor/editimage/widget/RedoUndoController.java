@@ -14,12 +14,7 @@ public class RedoUndoController implements View.OnClickListener {
     private EditImageFragment mActivity;
     private EditCache mEditCache = new EditCache();//保存前一次操作内容 用于撤销操作
 
-    private EditCache.ListModify mObserver = new EditCache.ListModify() {
-        @Override
-        public void onCacheListChange(EditCache cache) {
-            updateBtns();
-        }
-    };
+    private EditCache.ListModify mObserver = cache -> updateBtns();
 
     public RedoUndoController(EditImageFragment activity, View panelView) {
         this.mActivity = activity;

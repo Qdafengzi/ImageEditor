@@ -61,7 +61,7 @@ class EditImageFragment : Fragment() {
             //onBackPressed();
         }
         mBinding.mainImage.viewTreeObserver.addOnGlobalLayoutListener {
-            mBinding.imageGroup.setRootImageRect(
+            mBinding.addImageGroup.setRootImageRect(
                 mBinding.mainImage.rootImageRect,
                 mBinding.mainImage.width,
                 mBinding.mainImage.height
@@ -69,14 +69,14 @@ class EditImageFragment : Fragment() {
         }
 
         mBinding.btnImage.setOnClickListener {
-            mBinding.imageGroup.visibility = View.VISIBLE
+            mBinding.addImageGroup.visibility = View.VISIBLE
             mBinding.textGroup.visibility = View.GONE
             val bitmap = BitmapFactory.decodeResource(resources, R.mipmap.icon11)
-            mBinding.imageGroup.addBitImage(bitmap)
+            mBinding.addImageGroup.addBitImage(bitmap)
             XLogger.d("add image")
         }
         mBinding.btnText.setOnClickListener {
-            mBinding.imageGroup.visibility = View.GONE
+            mBinding.addImageGroup.visibility = View.GONE
             mBinding.textGroup.visibility = View.VISIBLE
 
             val addTextItemView = AddTextItemView(context)
@@ -114,14 +114,15 @@ class EditImageFragment : Fragment() {
 
 
     fun addImage(){
-        mBinding.imageGroup.visibility = View.VISIBLE
+        mBinding.addImageGroup.visibility = View.VISIBLE
         mBinding.textGroup.visibility = View.GONE
-        val bitmap = BitmapFactory.decodeResource(resources, R.mipmap.icon11)
-        mBinding.imageGroup.addBitImage(bitmap)
+        val iconList = listOf(R.mipmap.icon11,R.mipmap.icon222,R.mipmap.icon33,R.mipmap.icon_44)
+        val bitmap = BitmapFactory.decodeResource(resources, iconList.random())
+        mBinding.addImageGroup.addBitImage(bitmap)
     }
 
     fun addText(){
-        mBinding.imageGroup.visibility = View.GONE
+        mBinding.addImageGroup.visibility = View.GONE
         mBinding.textGroup.visibility = View.VISIBLE
 
         val addTextItemView = AddTextItemView(context)

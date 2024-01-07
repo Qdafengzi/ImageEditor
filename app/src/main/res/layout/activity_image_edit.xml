@@ -90,7 +90,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <com.example.editor.editimage.view.AddImageGroupView
-                android:id="@+id/imageGroup"
+                android:id="@+id/addImageGroup"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"

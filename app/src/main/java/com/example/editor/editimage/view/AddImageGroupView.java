@@ -13,9 +13,11 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
+import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 import com.example.editor.R;
+import com.example.editor.XLogger;
 import com.example.editor.editimage.utils.RectUtil;
 
 import java.util.LinkedHashMap;
@@ -37,10 +39,7 @@ public class AddImageGroupView extends View {
     private RectF shaderRec = new RectF();
     private final Paint shaderPaint = new Paint();
 
-
-//    private Paint rectPaint = new Paint();
-
-    private LinkedHashMap<Integer, AddImageItem> bank = new LinkedHashMap<Integer, AddImageItem>();// 存贮每层贴图数据
+    private LinkedHashMap<Integer, AddImageItem> mImageQueue = new LinkedHashMap<>();// 存贮每层贴图数据
 
     private Point mPoint = new Point(0 , 0);
 
@@ -61,11 +60,6 @@ public class AddImageGroupView extends View {
 
     private void init(Context context) {
         currentStatus = STATUS_IDLE;
-
-
-//        rectPaint.setColor(Color.RED);
-//        rectPaint.setAlpha(100);
-
     }
 
 
@@ -85,26 +79,30 @@ public class AddImageGroupView extends View {
     }
 
     public void addBitImage(final Bitmap addBit) {
-        AddImageItem item = new AddImageItem(this.getContext());
-        item.init(addBit, this);
+        XLogger.d(" addBitImage getWidth:"+ addBit.getWidth()+ " getHeight:"+ addBit.getHeight()+ "currentItem:"+currentItem);
+        AddImageItem addImageItem = new AddImageItem(this.getContext());
+        addImageItem.init(addBit, this);
         if (currentItem != null) {
             currentItem.isDrawHelpTool = false;
         }
-        bank.put(++imageCount, item);
-        this.invalidate();// 重绘视图
+        imageCount = imageCount +1;
+        mImageQueue.put(imageCount, addImageItem);
+        invalidate();// 重绘视图
     }
+
 
     /**
      * 绘制客户页面
      */
     @Override
-    protected void onDraw(Canvas canvas) {
+    protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
         // System.out.println("on draw!!~");
-        for (Integer id : bank.keySet()) {
-            AddImageItem item = bank.get(id);
-            item.draw(canvas);
-        }// end for each
+        for (Integer id : mImageQueue.keySet()) {
+            AddImageItem item = mImageQueue.get(id);
+            if (item!=null)
+                item.draw(canvas);
+        }
 
         combinedPath.op(screenPath, cropPath, Path.Op.DIFFERENCE);
         //绘制遮蔽层
@@ -130,8 +128,9 @@ public class AddImageGroupView extends View {
             case MotionEvent.ACTION_DOWN:
 
                 int deleteId = -1;
-                for (Integer id : bank.keySet()) {
-                    AddImageItem item = bank.get(id);
+                for (Integer id : mImageQueue.keySet()) {
+                    AddImageItem item = mImageQueue.get(id);
+                    if (item==null) break;
                     if (item.detectDeleteRect.contains(x, y)) {// 删除模式
                         // ret = true;
                         deleteId = id;
@@ -178,7 +177,7 @@ public class AddImageGroupView extends View {
                 }
 
                 if (deleteId > 0 && currentStatus == STATUS_DELETE) {// 删除选定贴图
-                    bank.remove(deleteId);
+                    mImageQueue.remove(deleteId);
                     currentStatus = STATUS_IDLE;// 返回空闲状态
                     invalidate();
                 }// end if
@@ -240,12 +239,12 @@ public class AddImageGroupView extends View {
         return item.helpBox.contains(mPoint.x, mPoint.y);
     }
 
-    public LinkedHashMap<Integer, AddImageItem> getBank() {
-        return bank;
+    public LinkedHashMap<Integer, AddImageItem> getImageQueue() {
+        return mImageQueue;
     }
 
     public void clear() {
-        bank.clear();
+        mImageQueue.clear();
         this.invalidate();
     }
 }
