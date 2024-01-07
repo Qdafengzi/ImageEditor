@@ -11,7 +11,7 @@ import com.example.editor.edit.crop.main.CropRequest
 import com.example.editor.edit.crop.ui.ImageCropFragment
 import com.example.editor.edit.crop.util.file.FileCreator
 import com.example.editor.edit.crop.util.file.FileOperationRequest
-import com.example.editor.imageeditlibrary.editimage.EditImageFragment
+import com.example.editor.editimage.EditImageFragment
 
 class ImageEditorActivity : AppCompatActivity() {
 
