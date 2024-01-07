@@ -79,8 +79,8 @@ class EditImageFragment : Fragment() {
             mBinding.addImageGroup.visibility = View.GONE
             mBinding.textGroup.visibility = View.VISIBLE
 
-            val addTextItemView = AddTextItemView(context)
-            val addTextItemView2 = AddTextItemView(context)
+            val addTextItemView = AddTextItemView(requireContext())
+            val addTextItemView2 = AddTextItemView(requireContext())
 
             addTextItemView.setRootImageRect(
                 mBinding.mainImage.rootImageRect,
@@ -125,7 +125,7 @@ class EditImageFragment : Fragment() {
         mBinding.addImageGroup.visibility = View.GONE
         mBinding.textGroup.visibility = View.VISIBLE
 
-        val addTextItemView = AddTextItemView(context)
+        val addTextItemView = AddTextItemView(requireContext())
         addTextItemView.setRootImageRect(
             mBinding.mainImage.rootImageRect,
             mBinding.mainImage.width,
