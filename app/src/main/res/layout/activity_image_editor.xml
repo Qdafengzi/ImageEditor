@@ -82,6 +82,12 @@
                 android:text="裁剪" />
 
             <Button
+                android:id="@+id/btnCropCancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="取消" />
+
+            <Button
                 android:id="@+id/btnLeft"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

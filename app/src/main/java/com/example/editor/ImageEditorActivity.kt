@@ -67,6 +67,15 @@ class ImageEditorActivity : AppCompatActivity() {
                 supportFragmentManager.beginTransaction().replace(R.id.frameLayout, cropFragment).commitAllowingStateLoss()
             }
         }
+
+        binding.btnCropCancel.setOnClickListener {
+            try {
+                supportFragmentManager.beginTransaction().replace(R.id.frameLayout, editImageFragment).commit()
+            } catch (e: Exception) {
+                XLogger.d("error")
+            }
+        }
+
         binding.btnLeft.setOnClickListener {
             cropFragment.rotate(-90f)
         }
