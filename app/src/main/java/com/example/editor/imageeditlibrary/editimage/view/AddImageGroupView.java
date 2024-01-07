@@ -9,7 +9,6 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.RectF;
-import android.os.Build;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -111,9 +110,7 @@ public class AddImageGroupView extends View {
             item.draw(canvas);
         }// end for each
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            combinedPath.op(screenPath, cropPath, Path.Op.DIFFERENCE);
-        }
+        combinedPath.op(screenPath, cropPath, Path.Op.DIFFERENCE);
         //绘制遮蔽层
         canvas.drawPath(combinedPath,shaderPaint);
 

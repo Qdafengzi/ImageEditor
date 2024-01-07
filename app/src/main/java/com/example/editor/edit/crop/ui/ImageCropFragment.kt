@@ -141,7 +141,11 @@ class ImageCropFragment : Fragment() {
 
         viewModel
             .getResizedBitmapLiveData()
-            .observe(viewLifecycleOwner, Observer { binding.cropView.setBitmap(it.bitmap) })
+            .observe(viewLifecycleOwner, Observer {
+                if ((it.bitmap?.width ?: 0) > 0){
+                    binding.cropView.setBitmap(it.bitmap)
+                }
+            })
 
     }
 

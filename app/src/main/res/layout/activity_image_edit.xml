@@ -11,6 +11,7 @@
         android:orientation="vertical">
 
         <FrameLayout
+            android:visibility="gone"
             android:id="@+id/banner"
             android:layout_width="match_parent"
             android:layout_height="55dp"
@@ -99,8 +100,20 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <com.example.editor.imageeditlibrary.editimage.view.AddTextItemView
-                android:id="@+id/textItem"
+<!--            <com.example.editor.imageeditlibrary.editimage.view.AddTextItemView-->
+<!--                android:id="@+id/textItem"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_gravity="center"-->
+<!--                android:visibility="gone"-->
+<!--                app:layout_constraintBottom_toBottomOf="parent"-->
+<!--                app:layout_constraintEnd_toEndOf="parent"-->
+<!--                app:layout_constraintStart_toStartOf="parent"-->
+<!--                app:layout_constraintTop_toTopOf="parent" />-->
+
+
+            <FrameLayout
+                android:id="@+id/textGroup"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -109,6 +122,9 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
+
+
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
 
@@ -116,6 +132,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/work_space">

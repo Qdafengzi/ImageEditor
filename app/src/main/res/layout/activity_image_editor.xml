@@ -10,13 +10,100 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <LinearLayout
+            android:id="@+id/mLlToopBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="撤销" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="保存" />
+
+        </LinearLayout>
+
         <FrameLayout
             android:id="@+id/frameLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/mLlToopBar" />
+
+
+        <LinearLayout
+            android:id="@+id/mLlAdd"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/frameLayout">
+
+            <Button
+                android:id="@+id/btnImage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="添加图片" />
+
+            <Button
+                android:id="@+id/btnText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="添加文字" />
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:id="@+id/mLlCrop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/mLlAdd">
+
+
+            <Button
+                android:id="@+id/btnCrop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="裁剪" />
+
+            <Button
+                android:id="@+id/btnLeft"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="左旋" />
+
+            <Button
+                android:id="@+id/btnRight"
+                android:layout_width="wrap_content"
+
+                android:layout_height="wrap_content"
+                android:text="右旋" />
+        </LinearLayout>
+
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/mSaveImage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
-import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
@@ -13,9 +12,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.widget.ImageView;
 
-import androidx.core.content.ContextCompat;
-
-import com.example.editor.R;
 import com.example.editor.imageeditlibrary.editimage.view.imagezoom.easing.Cubic;
 import com.example.editor.imageeditlibrary.editimage.view.imagezoom.easing.Easing;
 import com.example.editor.imageeditlibrary.editimage.view.imagezoom.graphic.FastBitmapDrawable;
@@ -110,7 +106,6 @@ public abstract class ImageViewTouchBase extends androidx.appcompat.widget.AppCo
 	private OnDrawableChangeListener mDrawableChangeListener;
 	private OnLayoutChangeListener mOnLayoutChangeListener;
 
-	private final Paint shaderPaint = new Paint();
 
 	public ImageViewTouchBase(Context context) {
 		super(context);
@@ -131,7 +126,6 @@ public abstract class ImageViewTouchBase extends androidx.appcompat.widget.AppCo
 	}
 
 	protected void init() {
-		shaderPaint.setColor(ContextCompat.getColor(this.getContext(), R.color.shader));
 		setScaleType(ScaleType.MATRIX);
 	}
 

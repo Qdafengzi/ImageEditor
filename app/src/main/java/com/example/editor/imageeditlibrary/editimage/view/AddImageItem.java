@@ -40,7 +40,6 @@ public class AddImageItem {
     public Matrix matrix;// 变化矩阵
     public float rotateAngle = 0;
     boolean isDrawHelpTool = false;
-//    private Paint dstPaint = new Paint();
     private final Paint helpBoxPaint = new Paint();
 
 
@@ -50,27 +49,16 @@ public class AddImageItem {
     private static Bitmap rotateBit;
     private static Bitmap scaleBit;
 
-//    private Paint debugPaint = new Paint();
     public RectF detectDeleteRect;
     public RectF detectRotateRect;
     public RectF detectScaleRect;
 
-    private Context context;
-
 
     public AddImageItem(Context context) {
-        this.context = context;
         helpBoxPaint.setColor(ContextCompat.getColor(context, R.color.rect_frame));
         helpBoxPaint.setStyle(Style.STROKE);
         helpBoxPaint.setAntiAlias(true);
         helpBoxPaint.setStrokeWidth(4);
-
-
-//        dstPaint.setColor(Color.RED);
-//        dstPaint.setAlpha(120);
-
-//        debugPaint.setColor(Color.GREEN);
-//        debugPaint.setAlpha(120);
 
         // 导入工具按钮位图
         if (deleteBit == null) {
@@ -159,105 +147,6 @@ public class AddImageItem {
         this.detectRotateRect.offset(dx, dy);
         this.detectScaleRect.offset(dx, dy);
     }
-
-    /**
-     * 旋转 缩放 更新
-     *
-     * @param dx
-     * @param dy
-     */
-//    public void updateRotateAndScale(final float oldx, final float oldy,
-//                                     final float dx, final float dy) {
-//        float c_x = dstRect.centerX();
-//        float c_y = dstRect.centerY();
-//
-//        float x = this.detectScaleRect.centerX();
-//        float y = this.detectScaleRect.centerY();
-//
-//        // float x = oldx;
-//        // float y = oldy;
-//
-//        float n_x = x + dx;
-//        float n_y = y + dy;
-//
-//        float xa = x - c_x;
-//        float ya = y - c_y;
-//
-//        float xb = n_x - c_x;
-//        float yb = n_y - c_y;
-//
-//        float srcLen = (float) Math.sqrt(xa * xa + ya * ya);
-//        float curLen = (float) Math.sqrt(xb * xb + yb * yb);
-//
-//        // System.out.println("srcLen--->" + srcLen + "   curLen---->" +
-//        // curLen);
-//
-//        float scale = curLen / srcLen;// 计算缩放比
-//
-//        float newWidth = dstRect.width() * scale;
-//        if (newWidth / initWidth < MIN_SCALE) {// 最小缩放值检测
-//            return;
-//        }
-//
-//        this.matrix.postScale(scale, scale, this.dstRect.centerX(),
-//                this.dstRect.centerY());// 存入scale矩阵
-//        // this.matrix.postRotate(5, this.dstRect.centerX(),
-//        // this.dstRect.centerY());
-//        RectUtil.scaleRect(this.dstRect, scale);// 缩放目标矩形
-//
-//        // 重新计算工具箱坐标
-//        helpBox.set(dstRect);
-//        updateHelpBoxRect();// 重新计算
-//
-//        deleteRect.offsetTo(helpBox.left - BUTTON_WIDTH, helpBox.top
-//                - BUTTON_WIDTH);
-//
-//        rotateRect.offsetTo(helpBox.left - BUTTON_WIDTH,helpBox.bottom
-//                - BUTTON_WIDTH);
-//
-//
-//        scaleRect.offsetTo(helpBox.right - BUTTON_WIDTH, helpBox.bottom
-//                - BUTTON_WIDTH);
-//
-//        detectDeleteRect.offsetTo(helpBox.left - BUTTON_WIDTH, helpBox.top
-//                - BUTTON_WIDTH);
-//
-//        detectRotateRect.offsetTo(helpBox.left - BUTTON_WIDTH, helpBox.bottom
-//                - BUTTON_WIDTH);
-//
-//        detectScaleRect.offsetTo(helpBox.right - BUTTON_WIDTH, helpBox.bottom
-//                - BUTTON_WIDTH);
-//
-//        double cos = (xa * xb + ya * yb) / (srcLen * curLen);
-//        if (cos > 1 || cos < -1)
-//            return;
-//        float angle = (float) Math.toDegrees(Math.acos(cos));
-//        // System.out.println("angle--->" + angle);
-//
-//        // 定理
-//        float calMatrix = xa * yb - xb * ya;// 行列式计算 确定转动方向
-//
-//        int flag = calMatrix > 0 ? 1 : -1;
-//        angle = flag * angle;
-//
-//        // System.out.println("angle--->" + angle);
-//        rotateAngle += angle;
-//        this.matrix.postRotate(angle, this.dstRect.centerX(),
-//                this.dstRect.centerY());
-//
-//        RectUtil.rotateRect(this.detectDeleteRect, this.dstRect.centerX(),
-//                this.dstRect.centerY(), rotateAngle);
-//
-//        RectUtil.rotateRect(this.detectRotateRect, this.dstRect.centerX(),
-//                this.dstRect.centerY(), rotateAngle);
-//
-//
-//        Log.d("旋转","======>"+detectRotateRect);
-//
-//        RectUtil.rotateRect(this.detectScaleRect, this.dstRect.centerX(),
-//                this.dstRect.centerY(), rotateAngle);
-//    }
-
 
     public void updateRotate(final float oldx, final float oldy,
                                      final float dx, final float dy) {

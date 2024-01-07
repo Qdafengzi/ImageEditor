@@ -547,6 +547,8 @@ class CropView @JvmOverloads constructor(
      * Create mask bitmap
      */
     private fun createMaskBitmap() {
+        if (measuredWidth<=0 || measuredHeight<=0) return
+
         maskBitmap = Bitmap.createBitmap(measuredWidth, measuredHeight, Bitmap.Config.ARGB_8888)
         maskCanvas = Canvas(maskBitmap!!)
     }

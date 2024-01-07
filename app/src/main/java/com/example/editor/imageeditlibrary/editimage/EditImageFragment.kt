@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment
 import com.example.editor.R
 import com.example.editor.XLogger
 import com.example.editor.databinding.ActivityImageEditBinding
+import com.example.editor.imageeditlibrary.editimage.view.AddTextItemView
 import com.example.editor.imageeditlibrary.editimage.view.imagezoom.ImageViewTouchBase
 import com.example.editor.imageeditlibrary.editimage.widget.RedoUndoController
 import java.io.File
@@ -76,19 +77,42 @@ class EditImageFragment : Fragment() {
                 mBinding.mainImage.height
             )
         }
+
         mBinding.btnImage.setOnClickListener {
             mBinding.imageGroup.visibility = View.VISIBLE
-            mBinding.textItem.visibility = View.GONE
+            mBinding.textGroup.visibility = View.GONE
             val bitmap = BitmapFactory.decodeResource(resources, R.mipmap.icon11)
             mBinding.imageGroup.addBitImage(bitmap)
             XLogger.d("add image")
         }
         mBinding.btnText.setOnClickListener {
             mBinding.imageGroup.visibility = View.GONE
-            mBinding.textItem.visibility = View.VISIBLE
-            //                mAddTextItemView.setText("哈哈哈哈");
-            mBinding.textItem.setText("哈哈哈哈\n嘻嘻嘻嘻嘻嘻\n啦啦啦啦啦啦")
+            mBinding.textGroup.visibility = View.VISIBLE
+
+            val addTextItemView = AddTextItemView(context)
+            val addTextItemView2 = AddTextItemView(context)
+
+            addTextItemView.setRootImageRect(
+                mBinding.mainImage.rootImageRect,
+                mBinding.mainImage.width,
+                mBinding.mainImage.height
+            )
+
+            addTextItemView2.setRootImageRect(
+                mBinding.mainImage.rootImageRect,
+                mBinding.mainImage.width,
+                mBinding.mainImage.height
+            )
+
+
+            addTextItemView.setText("哈哈哈哈\n嘻嘻嘻嘻嘻嘻\n啦啦啦啦啦啦")
+            addTextItemView2.setText("this is English")
+
+            mBinding.textGroup.addView(addTextItemView)
+            mBinding.textGroup.addView(addTextItemView2)
         }
+
+
         mBinding.mainImage.setFlingListener { e1, e2, velocityX, velocityY ->
             if (velocityY > 1) {
                 closeInputMethod()
@@ -96,6 +120,31 @@ class EditImageFragment : Fragment() {
         }
         mRedoUndoController = RedoUndoController(this, mBinding.redoUodoPanel)
     }
+
+
+
+    fun addImage(){
+        mBinding.imageGroup.visibility = View.VISIBLE
+        mBinding.textGroup.visibility = View.GONE
+        val bitmap = BitmapFactory.decodeResource(resources, R.mipmap.icon11)
+        mBinding.imageGroup.addBitImage(bitmap)
+    }
+
+    fun addText(){
+        mBinding.imageGroup.visibility = View.GONE
+        mBinding.textGroup.visibility = View.VISIBLE
+
+        val addTextItemView = AddTextItemView(context)
+        addTextItemView.setRootImageRect(
+            mBinding.mainImage.rootImageRect,
+            mBinding.mainImage.width,
+            mBinding.mainImage.height
+        )
+
+        addTextItemView.setText("哈哈哈哈\n嘻嘻嘻嘻嘻嘻\n啦啦啦啦啦啦")
+        mBinding.textGroup.addView(addTextItemView)
+    }
+
 
     private fun getImageFromAssetsFile(fileName: String): Bitmap? {
         var image: Bitmap? = null

@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -84,6 +85,8 @@ public class AddTextItemView extends View {
     private boolean isInitLayout = true;
 
     private boolean isShowHelpBox = true;
+    private final Paint shaderPaint = new Paint();
+
 
     private boolean mAutoNewLine = false;//是否需要自动换行
     private List<String> mTextContents = new ArrayList<String>(2);//存放所写的文字内容
@@ -111,6 +114,7 @@ public class AddTextItemView extends View {
     }
 
     private void initView(Context context) {
+        shaderPaint.setColor(ContextCompat.getColor(this.getContext(), R.color.shader));
         debugPaint.setColor(Color.parseColor("#66ff0000"));
 
         mDeleteBitmap = BitmapFactory.decodeResource(context.getResources(),
@@ -142,8 +146,27 @@ public class AddTextItemView extends View {
         mHelpPaint.setStrokeWidth(4);
     }
 
-    TextView example = new TextView(getContext());
 
+
+
+    Path screenPath = new Path();
+    Path cropPath = new Path();
+    Path combinedPath = new Path();
+    private RectF shaderRec = new RectF();
+
+    public void setRootImageRect(RectF bitmapRect, int width, int height){
+        shaderPaint.setColor(ContextCompat.getColor(this.getContext(), R.color.white));
+        shaderRec = bitmapRect;
+        screenPath.addRect(new RectF(0f, 0f,width, height), Path.Direction.CCW);
+        RectF cropRect = new RectF(shaderRec.left,
+                shaderRec.top,
+                shaderRec.right,
+                shaderRec.bottom);
+        cropPath.addRect(cropRect, Path.Direction.CW);
+    }
+
+
+    TextView example = new TextView(getContext());
     public void setText(String text) {
         this.mText = text;
         example.setText(text);
@@ -175,6 +198,11 @@ public class AddTextItemView extends View {
 
         parseText();
         drawContent(canvas);
+
+
+        //绘制遮蔽层
+        combinedPath.op(screenPath, cropPath, Path.Op.DIFFERENCE);
+        canvas.drawPath(combinedPath,shaderPaint);
     }
 
     protected void parseText() {
@@ -223,9 +251,6 @@ public class AddTextItemView extends View {
     }
 
     private void drawText(Canvas canvas) {
-        //修正一下y坐标
-
-
         drawText(canvas, layout_x, layout_y, mScale, mRotateAngle);
     }
 
@@ -284,7 +309,6 @@ public class AddTextItemView extends View {
 
         y = y -  totalHeight / 2;
 
-
         mTextRect.offset(x, y);
 
 //        mHelpBoxRect.set(
@@ -320,11 +344,11 @@ public class AddTextItemView extends View {
         for (int i = 0; i < mTextContents.size(); i++) {
             canvas.drawText(mTextContents.get(i), x, draw_text_y, mPaint);
             draw_text_y += textHeight;
-        }//end for i
+        }
 
 //        canvas.drawCircle(canvas.getWidth(),canvas.getHeight(),20f,mPaint);
-        canvas.drawLine(canvas.getWidth()/2,0,canvas.getWidth()/2,canvas.getHeight(),mPaint);
-        canvas.drawLine(0,canvas.getHeight()/2,canvas.getWidth(),canvas.getHeight()/2,mPaint);
+//        canvas.drawLine(canvas.getWidth()/2,0,canvas.getWidth()/2,canvas.getHeight(),mPaint);
+//        canvas.drawLine(0,canvas.getHeight()/2,canvas.getWidth(),canvas.getHeight()/2,mPaint);
 
         canvas.restore();
     }
